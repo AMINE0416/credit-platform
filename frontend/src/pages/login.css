@@ -1,7 +1,40 @@
+/* Animated geometric background elements */
+@keyframes float-slow {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(5deg); }
+}
+
+@keyframes pulse-glow {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+@keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
 .login-page {
     width: 100%;
     min-height: 100svh;
-    background: linear-gradient(135deg, #f8e7e5 0%, #fdf5f4 50%, #e8e8e8 100%);
+    background: linear-gradient(135deg, #0f0c1a 0%, #1a1428 40%, #2a1f35 100%);
+    background-image: 
+        linear-gradient(135deg, #0f0c1a 0%, #1a1428 40%, #2a1f35 100%),
+        radial-gradient(circle at 20% 80%, rgba(217, 79, 48, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 150, 100, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(138, 43, 226, 0.05) 0%, transparent 60%);
+    background-size: 
+        100% 100%,
+        400px 400px,
+        500px 500px,
+        600px 600px;
+    background-attachment: fixed;
+    background-position: 
+        0 0,
+        0 0,
+        0 0,
+        0 0;
     font-family: "Segoe UI", Arial, sans-serif;
     display: flex;
     flex-direction: column;
@@ -11,45 +44,44 @@
 }
 
 .login-page::before {
-    /* Watermark logo placed below the header so it remains visible */
+    /* Logo watermark background */
     content: '';
     position: absolute;
-    top: 160px; /* place below the top header */
-    right: 6%;
-    transform: rotate(-10deg);
-    width: 600px;
-    height: 600px;
+    bottom: -50px;
+    right: -80px;
+    width: 650px;
+    height: 650px;
     background-image: url('../assets/eqdom.jpg');
     background-repeat: no-repeat;
     background-position: center;
-    background-size: 55% auto;
+    background-size: 80%;
     z-index: 0;
-    filter: blur(2px) saturate(0.95) contrast(0.95);
-    mix-blend-mode: overlay;
+    opacity: 0.12;
+    filter: blur(0.5px) saturate(0.9);
     pointer-events: none;
+    mix-blend-mode: lighten;
 }
 
 .login-page::after {
-    /* Subtle warm gradient overlay to give a styled look without hiding the logo */
+    /* Accent gradient overlay with animated position */
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(217,79,48,0.03) 0%, rgba(255,255,255,0.02) 60%);
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(217, 79, 48, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 150, 100, 0.12) 0%, transparent 50%),
+        linear-gradient(135deg, 
+            rgba(217, 79, 48, 0.05) 0%, 
+            rgba(255, 200, 150, 0.02) 25%,
+            transparent 50%, 
+            rgba(217, 79, 48, 0.03) 100%);
     z-index: 0;
     pointer-events: none;
+    animation: pulse-glow 8s ease-in-out infinite;
 }
 
 /* Ensure the login card stays clearly above the watermark */
 .login-page > * { position: relative; z-index: 1; }
-
-/* Slightly lift the card to separate it more from the background */
-.login-card {
-    box-shadow: 0 12px 40px rgba(0,0,0,0.12), 0 6px 18px rgba(217,79,48,0.08);
-}
-
-/* Utility: easily adjust watermark opacity from one place */
-:root { --watermark-opacity: 0.09; }
-.login-page::before { opacity: var(--watermark-opacity); }
 
 /* Responsive: hide watermark on narrow screens to avoid overlap */
 @media (max-width: 900px) {
@@ -65,9 +97,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(135deg, #d94f30, #b8321a);
+    background: linear-gradient(135deg, #d94f30 0%, #b8321a 50%, #8b1a0a 100%);
     padding: 18px 40px;
     color: white;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 200, 150, 0.1);
+    box-shadow: 0 8px 32px rgba(217, 79, 48, 0.2);
 }
 
 .login-header-title {
@@ -83,31 +118,41 @@
 }
 
 .logo-image {
-    width: 28px;
-    height: 28px;
-    flex: 0 0 28px;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
     display: block;
     border-radius: 50%;
     object-fit: contain;
     background: white;
-    padding: 3px;
+    padding: 4px;
     box-sizing: border-box;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.logo-image:hover {
+    transform: scale(1.08);
 }
 
 .logo-text {
     display: flex;
     flex-direction: column;
-    line-height: 1.1;
+    line-height: 1.15;
 }
 
 .logo-text strong {
     font-size: 16px;
     text-transform: lowercase;
+    font-weight: 700;
+    letter-spacing: -0.3px;
 }
 
 .logo-text small {
     font-size: 10px;
-    opacity: 0.85;
+    opacity: 0.90;
+    font-weight: 400;
+    letter-spacing: 0.2px;
 }
 
 .login-container {
@@ -124,25 +169,42 @@
 .login-container::before {
     content: '';
     position: absolute;
-    bottom: -50px;
+    bottom: -100px;
     left: -50px;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(217, 79, 48, 0.06) 0%, transparent 70%);
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(217, 79, 48, 0.15) 0%, rgba(217, 79, 48, 0.05) 40%, transparent 70%);
     border-radius: 50%;
     z-index: 0;
+    animation: pulse-glow 4s ease-in-out infinite;
+}
+
+.login-container::after {
+    content: '';
+    position: absolute;
+    top: 50px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255, 150, 100, 0.12) 0%, transparent 60%);
+    border-radius: 50%;
+    z-index: 0;
+    animation: float-slow 8s ease-in-out infinite 1s;
 }
 
 .login-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(217, 79, 48, 0.1);
+    background: rgba(20, 15, 35, 0.85);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    box-shadow: 0 8px 40px rgba(217, 79, 48, 0.25), 
+                0 0 60px rgba(217, 79, 48, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
     padding: 40px;
     width: 380px;
     display: flex;
     flex-direction: column;
-    border-top: 4px solid #d94f30;
+    border: 1px solid rgba(217, 79, 48, 0.3);
+    border-top: 2px solid rgba(255, 200, 150, 0.5);
     position: relative;
     overflow: hidden;
 }
@@ -154,7 +216,19 @@
     right: -50%;
     width: 200px;
     height: 200px;
-    background: radial-gradient(circle, rgba(217, 79, 48, 0.05) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(217, 79, 48, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 0;
+}
+
+.login-card::after {
+    content: '';
+    position: absolute;
+    bottom: -50%;
+    left: -30%;
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(138, 43, 226, 0.08) 0%, transparent 70%);
     border-radius: 50%;
     z-index: 0;
 }
@@ -166,69 +240,112 @@
 
 .login-card h2 {
     margin: 0 0 4px;
-    color: #b8321a;
+    color: #ff9966;
+    font-size: 24px;
+    font-weight: 700;
 }
 
 .login-subtitle {
     font-size: 13px;
-    color: #777;
+    color: #b0b0b0;
     margin-bottom: 24px;
+    font-weight: 400;
 }
 
 .login-card label {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    color: #444;
-    margin-bottom: 6px;
-    margin-top: 14px;
+    color: #d0d0d0;
+    margin-bottom: 8px;
+    margin-top: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .login-card input {
-    border: 2px solid #e8e8e8;
-    border-radius: 6px;
-    padding: 10px 12px;
+    border: 1px solid rgba(217, 79, 48, 0.25);
+    border-radius: 8px;
+    padding: 13px 16px;
     font-size: 14px;
-    background: rgba(248, 248, 248, 0.8);
-    color: #222;
-    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    font-family: inherit;
+}
+
+.login-card input::placeholder {
+    color: rgba(255, 255, 255, 0.35);
 }
 
 .login-card input:focus {
     outline: none;
-    border-color: #d94f30;
-    background: white;
-    box-shadow: 0 0 0 3px rgba(217, 79, 48, 0.1);
+    border-color: #ff8a5b;
+    background: rgba(217, 79, 48, 0.12);
+    box-shadow: 0 0 0 4px rgba(217, 79, 48, 0.15), 
+                0 0 20px rgba(217, 79, 48, 0.15),
+                inset 0 0 15px rgba(217, 79, 48, 0.08);
+}
+
+.login-card input:hover:not(:focus) {
+    border-color: rgba(217, 79, 48, 0.4);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .login-card button {
-    margin-top: 24px;
-    background: linear-gradient(135deg, #d94f30, #b8321a);
+    margin-top: 28px;
+    background: linear-gradient(135deg, #d94f30 0%, #ff6b4a 100%);
     color: white;
     border: none;
-    border-radius: 6px;
-    padding: 12px;
+    border-radius: 8px;
+    padding: 14px;
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(217, 79, 48, 0.25);
+    box-shadow: 0 6px 20px rgba(217, 79, 48, 0.35), 
+                0 0 20px rgba(217, 79, 48, 0.15);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-card button::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .login-card button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(217, 79, 48, 0.35);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(217, 79, 48, 0.5), 
+                0 0 30px rgba(217, 79, 48, 0.25);
+}
+
+.login-card button:hover::before {
+    opacity: 1;
 }
 
 .login-card button:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
+    transform: translateY(0);
 }
 
 .login-error {
-    margin-top: 14px;
-    background: #fdecea;
-    color: #b8321a;
-    padding: 8px 12px;
-    border-radius: 4px;
+    margin-top: 16px;
+    background: rgba(220, 53, 69, 0.15);
+    color: #ff6b7a;
+    padding: 12px 14px;
+    border-radius: 8px;
     font-size: 13px;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    backdrop-filter: blur(10px);
 }
