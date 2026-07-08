@@ -1,0 +1,234 @@
+.login-page {
+    width: 100%;
+    min-height: 100svh;
+    background: linear-gradient(135deg, #f8e7e5 0%, #fdf5f4 50%, #e8e8e8 100%);
+    font-family: "Segoe UI", Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-page::before {
+    /* Watermark logo placed below the header so it remains visible */
+    content: '';
+    position: absolute;
+    top: 160px; /* place below the top header */
+    right: 6%;
+    transform: rotate(-10deg);
+    width: 600px;
+    height: 600px;
+    background-image: url('../assets/eqdom.jpg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 55% auto;
+    z-index: 0;
+    filter: blur(2px) saturate(0.95) contrast(0.95);
+    mix-blend-mode: overlay;
+    pointer-events: none;
+}
+
+.login-page::after {
+    /* Subtle warm gradient overlay to give a styled look without hiding the logo */
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(217,79,48,0.03) 0%, rgba(255,255,255,0.02) 60%);
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Ensure the login card stays clearly above the watermark */
+.login-page > * { position: relative; z-index: 1; }
+
+/* Slightly lift the card to separate it more from the background */
+.login-card {
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12), 0 6px 18px rgba(217,79,48,0.08);
+}
+
+/* Utility: easily adjust watermark opacity from one place */
+:root { --watermark-opacity: 0.09; }
+.login-page::before { opacity: var(--watermark-opacity); }
+
+/* Responsive: hide watermark on narrow screens to avoid overlap */
+@media (max-width: 900px) {
+    .login-page::before { display: none; }
+}
+
+.login-page > * {
+    position: relative;
+    z-index: 1;
+}
+
+.login-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #d94f30, #b8321a);
+    padding: 18px 40px;
+    color: white;
+}
+
+.login-header-title {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.login-header-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.logo-image {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    display: block;
+    border-radius: 50%;
+    object-fit: contain;
+    background: white;
+    padding: 3px;
+    box-sizing: border-box;
+}
+
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.logo-text strong {
+    font-size: 16px;
+    text-transform: lowercase;
+}
+
+.logo-text small {
+    font-size: 10px;
+    opacity: 0.85;
+}
+
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    min-height: 0;
+    padding: 32px 16px;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.login-container::before {
+    content: '';
+    position: absolute;
+    bottom: -50px;
+    left: -50px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(217, 79, 48, 0.06) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 0;
+}
+
+.login-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(217, 79, 48, 0.1);
+    padding: 40px;
+    width: 380px;
+    display: flex;
+    flex-direction: column;
+    border-top: 4px solid #d94f30;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(217, 79, 48, 0.05) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 0;
+}
+
+.login-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+.login-card h2 {
+    margin: 0 0 4px;
+    color: #b8321a;
+}
+
+.login-subtitle {
+    font-size: 13px;
+    color: #777;
+    margin-bottom: 24px;
+}
+
+.login-card label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 6px;
+    margin-top: 14px;
+}
+
+.login-card input {
+    border: 2px solid #e8e8e8;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 14px;
+    background: rgba(248, 248, 248, 0.8);
+    color: #222;
+    transition: all 0.3s ease;
+}
+
+.login-card input:focus {
+    outline: none;
+    border-color: #d94f30;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(217, 79, 48, 0.1);
+}
+
+.login-card button {
+    margin-top: 24px;
+    background: linear-gradient(135deg, #d94f30, #b8321a);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(217, 79, 48, 0.25);
+}
+
+.login-card button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(217, 79, 48, 0.35);
+}
+
+.login-card button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.login-error {
+    margin-top: 14px;
+    background: #fdecea;
+    color: #b8321a;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+}

@@ -1,0 +1,115 @@
+.fiche-page {
+    min-height: 100vh;
+    background: #f4f4f4;
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.fiche-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #d94f30, #b8321a);
+    padding: 16px 40px;
+    color: white;
+    font-weight: 600;
+}
+
+.fiche-header-logo { display: flex; align-items: center; gap: 10px; }
+.logo-circle {
+    background: white; color: #d94f30; width: 30px; height: 30px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;
+}
+.logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+.logo-text strong { font-size: 15px; }
+.logo-text small { font-size: 9px; opacity: 0.85; }
+
+.fiche-body {
+    background: linear-gradient(180deg, #e0503a, #c94328);
+    padding: 30px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 24px;
+}
+
+.fiche-col h3 {
+    color: white;
+    border-bottom: 2px solid rgba(255,255,255,0.4);
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+    font-size: 15px;
+}
+
+.field-group { margin-bottom: 10px; }
+.field-group label,
+.fiche-col-input label {
+    display: block;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 3px;
+    margin-top: 8px;
+}
+
+.field-group input,
+.field-group textarea,
+.fiche-col-input input,
+.fiche-col-input select,
+.fiche-col-input textarea {
+    width: 100%;
+    border: none;
+    border-radius: 3px;
+    padding: 7px 10px;
+    font-size: 13px;
+    background: #eaeaea;
+    color: #222;
+    box-sizing: border-box;
+}
+
+/* Ensure read-only fields remain readable on colored backgrounds */
+.field-group input[readonly],
+.field-group textarea[readonly] {
+    color: #222;
+    background: #f5f5f5;
+}
+
+.fiche-col-input input,
+.fiche-col-input select,
+.fiche-col-input textarea {
+    background: white;
+    border: 1px solid #ccc;
+}
+
+.fiche-col-input input:focus,
+.fiche-col-input textarea:focus {
+    outline: none;
+    border-color: #ffd6cc;
+}
+
+.fiche-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 20px 30px;
+    background: #f4f4f4;
+}
+
+.btn-enregistrer, .btn-exporter {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-enregistrer {
+    background: linear-gradient(135deg, #d94f30, #b8321a);
+    color: white;
+}
+
+.btn-exporter {
+    background: white;
+    border: 1px solid #d94f30;
+    color: #d94f30;
+}
+
+.loading { padding: 40px; text-align: center; }
