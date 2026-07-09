@@ -91,11 +91,8 @@ public class DossierController {
     @GetMapping("/{id}")
     public ResponseEntity<DossierDetailDTO> getDossier(@PathVariable Long id) {
         try {
-            Dossier dossier = dossierRepository.findById(id)
+            Dossier dossier = dossierRepository.findByIdWithRelations(id)
                     .orElseThrow(() -> new RuntimeException("Dossier introuvable: " + id));
-            
-            // Force le chargement des relations avant le DTO
-            dossier.getCredit();
             
             return ResponseEntity.ok(new DossierDetailDTO(dossier));
         } catch (Exception e) {
