@@ -1,5 +1,6 @@
 package org.eqdom.creditplatform.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.eqdom.creditplatform.model.Client;
 import org.eqdom.creditplatform.model.Credit;
 import org.eqdom.creditplatform.model.Dossier;
