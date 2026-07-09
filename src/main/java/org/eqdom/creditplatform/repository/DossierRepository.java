@@ -17,6 +17,7 @@ public interface DossierRepository extends JpaRepository<Dossier, Long> {
     @Query("SELECT DISTINCT d FROM Dossier d " +
            "LEFT JOIN FETCH d.credit c " +
            "LEFT JOIN FETCH c.client " +
+           "LEFT JOIN FETCH d.agentAssigne " +
            "WHERE d.id = :id")
     Optional<Dossier> findByIdWithRelations(@Param("id") Long id);
 }

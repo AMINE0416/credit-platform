@@ -108,46 +108,87 @@ public class DossierController {
             @RequestBody ActionDossierRequest request,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
-        Dossier dossier = dossierRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Dossier introuvable"));
-
-        if (dossier.getStatutActuel() == StatutDossier.CLOTURE) {
-            return ResponseEntity.badRequest().body("Dossier clôturé : modification interdite");
-        }
-
-        if ("PROMESSE".equals(request.getNouveauStatut())
-                && (request.getMontantPromesse() == null || request.getDatePromesse() == null)) {
-            return ResponseEntity.badRequest().body("Montant et date de promesse obligatoires");
-        }
-
-        if (request.getNouveauStatut() != null) {
-            StatutDossier nouveau = StatutDossier.valueOf(request.getNouveauStatut());
-            if (!TRANSITIONS_AUTORISEES.get(dossier.getStatutActuel()).contains(nouveau)) {
-                return ResponseEntity.badRequest().body(
-                        "Transition non autorisée : " + dossier.getStatutActuel() + " → " + nouveau);
+        try {
+            if (currentUser == null) {
+                System.err.println("ERROR: currentUser is NULL");
+                return ResponseEntity.status(401).body("Non authentifié");
             }
+
+            User currentUserEntity = currentUser.getUser();
+            if (currentUserEntity == null) {
+                System.err.println("ERROR: currentUserEntity is NULL");
+                return ResponseEntity.status(401).body("Utilisateur introuvable");
+            }
+
+            System.out.println("DEBUG: currentUser ID = " + currentUserEntity.getId() + ", email = " + currentUserEntity.getEmail());
+
+            Dossier dossier = dossierRepository.findByIdWithRelations(id)
+                    .orElseThrow(() -> new RuntimeException("Dossier introuvable: " + id));
+
+            System.out.println("DEBUG: dossier.agentAssigne = " + (dossier.getAgentAssigne() != null ? dossier.getAgentAssigne().getId() : "NULL"));
+
+            boolean isAdmin = currentUserEntity.getRoles().stream()
+                    .anyMatch(r -> r.getNom().equals("ADMIN"));
+
+            System.out.println("DEBUG: isAdmin = " + isAdmin);
+
+            // Vérification d'accès: ADMIN peut accéder à tous, AGENT seulement aux dossiers assignés
+            if (!isAdmin) {
+                if (dossier.getAgentAssigne() == null) {
+                    System.err.println("DEBUG: Dossier non assigné");
+                    return ResponseEntity.status(403).body("Dossier non assigné: vous n'avez pas accès");
+                }
+                if (!currentUserEntity.getId().equals(dossier.getAgentAssigne().getId())) {
+                    System.err.println("DEBUG: User ID " + currentUserEntity.getId() + " != Agent ID " + dossier.getAgentAssigne().getId());
+                    return ResponseEntity.status(403).body("Accès refusé: vous n'êtes pas assigné à ce dossier");
+                }
+            }
+
+            if (dossier.getStatutActuel() == StatutDossier.CLOTURE) {
+                return ResponseEntity.badRequest().body("Dossier clôturé : modification interdite");
+            }
+
+            if ("PROMESSE".equals(request.getNouveauStatut())
+                    && (request.getMontantPromesse() == null || request.getDatePromesse() == null)) {
+                return ResponseEntity.badRequest().body("Montant et date de promesse obligatoires");
+            }
+
+            if (request.getNouveauStatut() != null) {
+                StatutDossier nouveau = StatutDossier.valueOf(request.getNouveauStatut());
+                if (!TRANSITIONS_AUTORISEES.get(dossier.getStatutActuel()).contains(nouveau)) {
+                    return ResponseEntity.badRequest().body(
+                            "Transition non autorisée : " + dossier.getStatutActuel() + " → " + nouveau);
+                }
+            }
+
+            ActionDossier action = new ActionDossier();
+            action.setDossier(dossier);
+            action.setAgent(currentUserEntity);
+            action.setNatureAction(request.getNatureAction());
+            action.setMotifImpaye(request.getMotifImpaye());
+            action.setCompteRendu(request.getCompteRendu());
+            action.setCodeResultat(request.getCodeResultat());
+            action.setRecidive(request.getRecidive());
+            action.setNbreActionClient(request.getNbreActionClient());
+            action.setMontantPromesse(request.getMontantPromesse());
+            action.setDatePromesse(request.getDatePromesse());
+            action.setNouveauTelephone(request.getNouveauTelephone());
+            actionDossierRepository.save(action);
+
+            if (request.getNouveauStatut() != null) {
+                dossier.setStatutActuel(StatutDossier.valueOf(request.getNouveauStatut()));
+                dossierRepository.save(dossier);
+            }
+
+            System.out.println("DEBUG: Action saved successfully");
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Statut invalide: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Erreur ajouterAction: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Erreur lors de l'enregistrement: " + e.getMessage());
         }
-
-        ActionDossier action = new ActionDossier();
-        action.setDossier(dossier);
-        action.setAgent(currentUser.getUser());
-        action.setNatureAction(request.getNatureAction());
-        action.setMotifImpaye(request.getMotifImpaye());
-        action.setCompteRendu(request.getCompteRendu());
-        action.setCodeResultat(request.getCodeResultat());
-        action.setRecidive(request.getRecidive());
-        action.setNbreActionClient(request.getNbreActionClient());
-        action.setMontantPromesse(request.getMontantPromesse());
-        action.setDatePromesse(request.getDatePromesse());
-        action.setNouveauTelephone(request.getNouveauTelephone());
-        actionDossierRepository.save(action);
-
-        if (request.getNouveauStatut() != null) {
-            dossier.setStatutActuel(StatutDossier.valueOf(request.getNouveauStatut()));
-            dossierRepository.save(dossier);
-        }
-
-        return ResponseEntity.ok().build();
     }
 
     // Affectation / Réaffectation en masse (module 4.5 — Admin uniquement, protégé par SecurityConfig)
