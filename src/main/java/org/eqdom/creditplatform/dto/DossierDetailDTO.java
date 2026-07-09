@@ -15,8 +15,22 @@ public class DossierDetailDTO {
     public DossierDetailDTO(Dossier dossier) {
         this.dossierId = dossier.getId();
         this.statut = dossier.getStatutActuel().name();
-        this.credit = new CreditDTO(dossier.getCredit());
-        this.client = new ClientDTO(dossier.getCredit().getClient());
+        
+        try {
+            Credit credit = dossier.getCredit();
+            if (credit == null) {
+                throw new RuntimeException("Crédit non trouvé pour le dossier " + dossier.getId());
+            }
+            this.credit = new CreditDTO(credit);
+            
+            Client client = credit.getClient();
+            if (client == null) {
+                throw new RuntimeException("Client non trouvé pour le crédit " + credit.getId());
+            }
+            this.client = new ClientDTO(client);
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors du chargement du dossier: " + e.getMessage(), e);
+        }
     }
 
     public Long getDossierId() { return dossierId; }

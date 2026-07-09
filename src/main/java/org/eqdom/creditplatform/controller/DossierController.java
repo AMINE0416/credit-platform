@@ -90,9 +90,19 @@ public class DossierController {
 
     @GetMapping("/{id}")
     public ResponseEntity<DossierDetailDTO> getDossier(@PathVariable Long id) {
-        Dossier dossier = dossierRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Dossier introuvable"));
-        return ResponseEntity.ok(new DossierDetailDTO(dossier));
+        try {
+            Dossier dossier = dossierRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Dossier introuvable: " + id));
+            
+            // Force le chargement des relations avant le DTO
+            dossier.getCredit();
+            
+            return ResponseEntity.ok(new DossierDetailDTO(dossier));
+        } catch (Exception e) {
+            System.err.println("Erreur getDossier " + id + ": " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
+        }
     }
 
     @PostMapping("/{id}/actions")
@@ -146,14 +156,29 @@ public class DossierController {
     // Affectation / Réaffectation en masse (module 4.5 — Admin uniquement, protégé par SecurityConfig)
     @PutMapping("/affectation")
     public ResponseEntity<?> affecter(@RequestBody AffectationRequest request) {
-        User agent = userRepository.findById(request.getAgentId())
-                .orElseThrow(() -> new RuntimeException("Agent introuvable"));
+        try {
+            User agent = userRepository.findById(request.getAgentId())
+                    .orElseThrow(() -> new RuntimeException("Agent introuvable: " + request.getAgentId()));
 
-        List<Dossier> dossiers = dossierRepository.findAllById(request.getDossierIds());
-        dossiers.forEach(d -> d.setAgentAssigne(agent));
-        dossierRepository.saveAll(dossiers);
+            List<Dossier> dossiers = dossierRepository.findAllById(request.getDossierIds());
+            
+            if (dossiers.isEmpty()) {
+                return ResponseEntity.badRequest().body("Aucun dossier trouvé");
+            }
+            
+            for (Dossier d : dossiers) {
+                // Forcer le chargement des relations
+                d.getCredit();
+                d.setAgentAssigne(agent);
+            }
+            dossierRepository.saveAll(dossiers);
 
-        return ResponseEntity.ok(Map.of("nbAffectes", dossiers.size()));
+            return ResponseEntity.ok(Map.of("nbAffectes", dossiers.size()));
+        } catch (Exception e) {
+            System.err.println("Erreur affectation: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Erreur: " + e.getMessage());
+        }
     }
 
     // Historique des actions d'un dossier (utile pour l'affichage détaillé)
