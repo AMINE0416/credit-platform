@@ -99,16 +99,46 @@ export default function DossierDetail() {
                     <h3>Données à Saisir</h3>
 
                     <label>Nature Action</label>
-                    <input value={natureAction} onChange={(e) => setNatureAction(e.target.value)} />
+                    <select value={natureAction} onChange={(e) => setNatureAction(e.target.value)}>
+                        <option value="">-- Sélectionner --</option>
+                        <option value="APPEL_SORTANT">Appel sortant</option>
+                        <option value="APPEL_ENTRANT">Appel entrant (client rappelle)</option>
+                        <option value="SMS_RELANCE">SMS de relance</option>
+                        <option value="EMAIL_RELANCE">Email de relance</option>
+                        <option value="VISITE_TERRAIN">Visite terrain</option>
+                        <option value="COURRIER_MISE_EN_DEMEURE">Courrier / mise en demeure</option>
+                        <option value="RELANCE_VIA_TIERS">Relance via tiers (garant, entourage)</option>
+                    </select>
 
                     <label>Motif Impayé</label>
-                    <input value={motifImpaye} onChange={(e) => setMotifImpaye(e.target.value)} />
+                    <select value={motifImpaye} onChange={(e) => setMotifImpaye(e.target.value)}>
+                        <option value="">-- Sélectionner --</option>
+                        <option value="PERTE_EMPLOI">Perte d'emploi</option>
+                        <option value="DIFFICULTE_FINANCIERE_TEMPORAIRE">Difficulté financière temporaire</option>
+                        <option value="LITIGE_VEHICULE_PRODUIT">Litige sur le véhicule/produit</option>
+                        <option value="DECES_EMPRUNTEUR">Décès de l'emprunteur</option>
+                        <option value="MALADIE_HOSPITALISATION">Maladie / hospitalisation</option>
+                        <option value="OUBLI_PAIEMENT">Oubli de paiement</option>
+                        <option value="CONTESTATION_MONTANT">Contestation du montant</option>
+                        <option value="CLIENT_INJOIGNABLE">Client injoignable (motif inconnu)</option>
+                        <option value="AUTRE">Autre</option>
+                    </select>
 
                     <label>Compte rendu</label>
                     <textarea value={compteRendu} onChange={(e) => setCompteRendu(e.target.value)} rows={3} />
 
                     <label>Code resultat</label>
-                    <input value={codeResultat} onChange={(e) => setCodeResultat(e.target.value)} />
+                    <select value={codeResultat} onChange={(e) => setCodeResultat(e.target.value)}>
+                        <option value="">-- Sélectionner --</option>
+                        <option value="RC">RC - Right Contact</option>
+                        <option value="RPC">RPC - Right Party Contact</option>
+                        <option value="NRP">NRP - No Right Party</option>
+                        <option value="NRC">NRC - No Reply Contact</option>
+                        <option value="NUM_INVALIDE">NUM_INVALIDE - Numéro invalide/hors service</option>
+                        <option value="REFUS">REFUS - Client refuse de payer</option>
+                        <option value="DIFFERE">DIFFERE - Client demande un délai</option>
+                        <option value="REGLE">REGLE - Client confirme paiement effectué</option>
+                    </select>
 
                     <label>Récidive O/N</label>
                     <select value={recidive ? "O" : "N"} onChange={(e) => setRecidive(e.target.value === "O")}>

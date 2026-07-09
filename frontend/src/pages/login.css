@@ -118,41 +118,42 @@
 }
 
 .logo-image {
-    width: 32px;
-    height: 32px;
-    flex: 0 0 32px;
+    width: 56px;
+    height: 56px;
+    flex: 0 0 56px;
     display: block;
-    border-radius: 50%;
+    border-radius: 8px;
     object-fit: contain;
     background: white;
-    padding: 4px;
+    padding: 6px;
     box-sizing: border-box;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    transition: transform 0.3s ease;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .logo-image:hover {
-    transform: scale(1.08);
+    transform: scale(1.06);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.28);
 }
 
 .logo-text {
     display: flex;
     flex-direction: column;
-    line-height: 1.15;
+    line-height: 1.02;
 }
 
 .logo-text strong {
-    font-size: 16px;
-    text-transform: lowercase;
-    font-weight: 700;
-    letter-spacing: -0.3px;
+    font-size: 22px;
+    text-transform: none;
+    font-weight: 800;
+    letter-spacing: -0.4px;
 }
 
 .logo-text small {
-    font-size: 10px;
-    opacity: 0.90;
-    font-weight: 400;
-    letter-spacing: 0.2px;
+    font-size: 13px;
+    opacity: 0.95;
+    font-weight: 500;
+    margin-top: 2px;
 }
 
 .login-container {

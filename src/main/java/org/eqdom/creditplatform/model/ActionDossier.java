@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
 @Entity
 @Table(name = "actions_dossier")
@@ -21,14 +23,20 @@ public class ActionDossier {
     @JoinColumn(name = "user_id", nullable = false)
     private User agent;
 
-    private String natureAction;
-    private String motifImpaye;
+    @Enumerated(EnumType.STRING)
+    private NatureAction natureAction;
+
+    @Enumerated(EnumType.STRING)
+    private MotifImpaye motifImpaye;
 
     @Column(length = 2000)
     private String compteRendu;
 
-    private String codeResultat;
-    private Boolean recidive;
+    @Enumerated(EnumType.STRING)
+    private CodeResultat codeResultat;
+
+    @Enumerated(EnumType.STRING)
+    private Recidive recidive;
     private Integer nbreActionClient;
 
     private BigDecimal montantPromesse;
@@ -44,16 +52,16 @@ public class ActionDossier {
     public void setDossier(Dossier dossier) { this.dossier = dossier; }
     public User getAgent() { return agent; }
     public void setAgent(User agent) { this.agent = agent; }
-    public String getNatureAction() { return natureAction; }
-    public void setNatureAction(String natureAction) { this.natureAction = natureAction; }
-    public String getMotifImpaye() { return motifImpaye; }
-    public void setMotifImpaye(String motifImpaye) { this.motifImpaye = motifImpaye; }
+    public NatureAction getNatureAction() { return natureAction; }
+    public void setNatureAction(NatureAction natureAction) { this.natureAction = natureAction; }
+    public MotifImpaye getMotifImpaye() { return motifImpaye; }
+    public void setMotifImpaye(MotifImpaye motifImpaye) { this.motifImpaye = motifImpaye; }
     public String getCompteRendu() { return compteRendu; }
     public void setCompteRendu(String compteRendu) { this.compteRendu = compteRendu; }
-    public String getCodeResultat() { return codeResultat; }
-    public void setCodeResultat(String codeResultat) { this.codeResultat = codeResultat; }
-    public Boolean getRecidive() { return recidive; }
-    public void setRecidive(Boolean recidive) { this.recidive = recidive; }
+    public CodeResultat getCodeResultat() { return codeResultat; }
+    public void setCodeResultat(CodeResultat codeResultat) { this.codeResultat = codeResultat; }
+    public Recidive getRecidive() { return recidive; }
+    public void setRecidive(Recidive recidive) { this.recidive = recidive; }
     public Integer getNbreActionClient() { return nbreActionClient; }
     public void setNbreActionClient(Integer nbreActionClient) { this.nbreActionClient = nbreActionClient; }
     public BigDecimal getMontantPromesse() { return montantPromesse; }

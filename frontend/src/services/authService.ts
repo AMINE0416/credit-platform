@@ -10,8 +10,21 @@ export interface LoginResponse {
 }
 
 export async function login(email: string, password: string): Promise<LoginResponse> {
-    const response = await axios.post<LoginResponse>(`${API_URL}/login`, { email, password });
-    return response.data;
+    try {
+        const response = await axios.post<LoginResponse>(`${API_URL}/login`, { email, password });
+        return response.data;
+    } catch (error: any) {
+        if (error.response) {
+            // Erreur retournée par le serveur
+            throw new Error(error.response.data || "Email ou mot de passe incorrect");
+        } else if (error.request) {
+            // Pas de réponse du serveur
+            throw new Error("Impossible de contacter le serveur. Vérifiez que le backend est démarré.");
+        } else {
+            // Autre erreur
+            throw new Error("Une erreur est survenue lors de la connexion");
+        }
+    }
 }
 
 export function logout() {

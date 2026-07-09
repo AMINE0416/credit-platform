@@ -1,0 +1,15 @@
+.filters-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+}
+.filters-bar select {
+    padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;
+}
+.affectation-bar { display: flex; gap: 10px; align-items: center; margin-left: auto; }
+
+.badge { color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.btn-open {
+    background: #d94f30; color: white; border: none;
+    padding: 6px 14px; border-radius: 4px; cursor: pointer;
+}
+.empty { text-align: center; color: #999; padding: 30px; }

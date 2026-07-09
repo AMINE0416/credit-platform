@@ -1,0 +1,35 @@
+.page-title { color: #b8321a; margin-bottom: 24px; }
+.section-title { color: #444; margin: 30px 0 16px; font-size: 16px; }
+
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+.kpi-card {
+    background: white;
+    border-radius: 8px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    border-top: 4px solid #d94f30;
+}
+.kpi-value { font-size: 32px; font-weight: 700; color: #b8321a; }
+.kpi-label { font-size: 13px; color: #777; margin-top: 6px; }
+
+.statut-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
+}
+.statut-card {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    border-top: 4px solid;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.statut-count { display: block; font-size: 24px; font-weight: 700; color: #333; }
+.statut-label { font-size: 12px; color: #888; }

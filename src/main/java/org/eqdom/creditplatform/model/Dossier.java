@@ -11,7 +11,7 @@ public class Dossier {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "credit_id", nullable = false, unique = true)
     private Credit credit;
 

@@ -1,0 +1,21 @@
+.import-card {
+    background: white; padding: 24px; border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 24px;
+}
+.import-hint { font-size: 13px; color: #777; margin-bottom: 16px; }
+.import-card input[type="file"] { margin-right: 16px; }
+
+.rapport-card {
+    background: white; padding: 24px; border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+.rapport-stats { display: flex; gap: 16px; margin: 16px 0 24px; }
+.stat {
+    flex: 1; background: #f8f8f8; border-radius: 6px; padding: 16px;
+    display: flex; flex-direction: column; text-align: center;
+}
+.stat-value { font-size: 24px; font-weight: 700; }
+.stat.success .stat-value { color: #27ae60; }
+.stat.info .stat-value { color: #3498db; }
+.stat.error .stat-value { color: #b8321a; }
+.motif-erreur { color: #b8321a; font-size: 13px; }

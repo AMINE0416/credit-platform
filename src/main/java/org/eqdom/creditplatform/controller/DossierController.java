@@ -1,12 +1,8 @@
 package org.eqdom.creditplatform.controller;
 
-import org.eqdom.creditplatform.dto.ActionDossierRequest;
-import org.eqdom.creditplatform.dto.DossierDetailDTO;
-import org.eqdom.creditplatform.dto.DossierListItemDTO;
+import org.eqdom.creditplatform.dto.*;
 import org.eqdom.creditplatform.model.*;
-import org.eqdom.creditplatform.repository.ActionDossierRepository;
-import org.eqdom.creditplatform.repository.DossierRepository;
-import org.eqdom.creditplatform.repository.UserRepository;
+import org.eqdom.creditplatform.repository.*;
 import org.eqdom.creditplatform.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +10,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/dossiers")
@@ -23,31 +21,73 @@ public class DossierController {
     @Autowired private ActionDossierRepository actionDossierRepository;
     @Autowired private UserRepository userRepository;
 
-    // Liste des dossiers assignés à l'agent connecté
+    private static final Map<StatutDossier, Set<StatutDossier>> TRANSITIONS_AUTORISEES = Map.of(
+            StatutDossier.NOUVEAU, Set.of(StatutDossier.EN_COURS),
+            StatutDossier.EN_COURS, Set.of(StatutDossier.PROMESSE, StatutDossier.INJOIGNABLE, StatutDossier.REGULARISE),
+            StatutDossier.INJOIGNABLE, Set.of(StatutDossier.EN_COURS),
+            StatutDossier.PROMESSE, Set.of(StatutDossier.REGULARISE, StatutDossier.EN_COURS),
+            StatutDossier.REGULARISE, Set.of(StatutDossier.CLOTURE),
+            StatutDossier.CLOTURE, Set.of()
+    );
+
     @GetMapping
-    public ResponseEntity<List<DossierListItemDTO>> getMesDossiers(
+    public ResponseEntity<List<DossierListItemDTO>> getDossiers(
+            @RequestParam(required = false) String statut,
+            @RequestParam(required = false) String ville,
+            @RequestParam(required = false) Long agentId,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
-        User agent = currentUser.getUser();
-        boolean isAdmin = agent.getRoles().stream().anyMatch(r -> r.getNom().equals("ADMIN"));
+        User connecte = currentUser.getUser();
+        boolean isAdmin = connecte.getRoles().stream().anyMatch(r -> r.getNom().equals("ADMIN"));
 
         List<Dossier> dossiers = isAdmin
                 ? dossierRepository.findAll()
-                : dossierRepository.findByAgentAssigne(agent);
+                : dossierRepository.findByAgentAssigne(connecte);
 
-        List<DossierListItemDTO> result = dossiers.stream().map(d -> new DossierListItemDTO(
-                d.getId(),
-                d.getCredit().getClient().getCin(),
-                d.getCredit().getClient().getPrenom() + " " + d.getCredit().getClient().getNom(),
-                d.getCredit().getReferenceContrat(),
-                d.getStatutActuel().name(),
-                d.getCredit().getClient().getVille()
-        )).toList();
+        List<DossierListItemDTO> result = dossiers.stream()
+                .filter(d -> statut == null || d.getStatutActuel().name().equals(statut))
+                .filter(d -> ville == null || d.getCredit().getClient().getVille().equalsIgnoreCase(ville))
+                .filter(d -> agentId == null || (d.getAgentAssigne() != null && d.getAgentAssigne().getId().equals(agentId)))
+                .map(d -> new DossierListItemDTO(
+                        d.getId(),
+                        d.getCredit().getClient().getCin(),
+                        d.getCredit().getClient().getPrenom() + " " + d.getCredit().getClient().getNom(),
+                        d.getCredit().getReferenceContrat(),
+                        d.getStatutActuel().name(),
+                        d.getCredit().getClient().getVille(),
+                        d.getAgentAssigne() != null
+                                ? d.getAgentAssigne().getPrenom() + " " + d.getAgentAssigne().getNom()
+                                : "Non assigné"
+                ))
+                .toList();
 
         return ResponseEntity.ok(result);
     }
 
-    // Fiche dossier détaillée
+    @GetMapping("/me")
+    public ResponseEntity<List<DossierListItemDTO>> getMesDossiers(
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+
+        User connecte = currentUser.getUser();
+        List<Dossier> dossiers = dossierRepository.findByAgentAssigne(connecte);
+
+        List<DossierListItemDTO> result = dossiers.stream()
+                .map(d -> new DossierListItemDTO(
+                        d.getId(),
+                        d.getCredit().getClient().getCin(),
+                        d.getCredit().getClient().getPrenom() + " " + d.getCredit().getClient().getNom(),
+                        d.getCredit().getReferenceContrat(),
+                        d.getStatutActuel().name(),
+                        d.getCredit().getClient().getVille(),
+                        d.getAgentAssigne() != null
+                                ? d.getAgentAssigne().getPrenom() + " " + d.getAgentAssigne().getNom()
+                                : "Non assigné"
+                ))
+                .toList();
+
+        return ResponseEntity.ok(result);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<DossierDetailDTO> getDossier(@PathVariable Long id) {
         Dossier dossier = dossierRepository.findById(id)
@@ -55,7 +95,6 @@ public class DossierController {
         return ResponseEntity.ok(new DossierDetailDTO(dossier));
     }
 
-    // Enregistrer une action + changement de statut
     @PostMapping("/{id}/actions")
     public ResponseEntity<?> ajouterAction(
             @PathVariable Long id,
@@ -69,10 +108,17 @@ public class DossierController {
             return ResponseEntity.badRequest().body("Dossier clôturé : modification interdite");
         }
 
-        // Règle métier : PROMESSE exige montant + date
         if ("PROMESSE".equals(request.getNouveauStatut())
                 && (request.getMontantPromesse() == null || request.getDatePromesse() == null)) {
             return ResponseEntity.badRequest().body("Montant et date de promesse obligatoires");
+        }
+
+        if (request.getNouveauStatut() != null) {
+            StatutDossier nouveau = StatutDossier.valueOf(request.getNouveauStatut());
+            if (!TRANSITIONS_AUTORISEES.get(dossier.getStatutActuel()).contains(nouveau)) {
+                return ResponseEntity.badRequest().body(
+                        "Transition non autorisée : " + dossier.getStatutActuel() + " → " + nouveau);
+            }
         }
 
         ActionDossier action = new ActionDossier();
@@ -95,5 +141,24 @@ public class DossierController {
         }
 
         return ResponseEntity.ok().build();
+    }
+
+    // Affectation / Réaffectation en masse (module 4.5 — Admin uniquement, protégé par SecurityConfig)
+    @PutMapping("/affectation")
+    public ResponseEntity<?> affecter(@RequestBody AffectationRequest request) {
+        User agent = userRepository.findById(request.getAgentId())
+                .orElseThrow(() -> new RuntimeException("Agent introuvable"));
+
+        List<Dossier> dossiers = dossierRepository.findAllById(request.getDossierIds());
+        dossiers.forEach(d -> d.setAgentAssigne(agent));
+        dossierRepository.saveAll(dossiers);
+
+        return ResponseEntity.ok(Map.of("nbAffectes", dossiers.size()));
+    }
+
+    // Historique des actions d'un dossier (utile pour l'affichage détaillé)
+    @GetMapping("/{id}/actions")
+    public ResponseEntity<List<ActionDossier>> getActions(@PathVariable Long id) {
+        return ResponseEntity.ok(actionDossierRepository.findByDossierIdOrderByDateActionDesc(id));
     }
 }

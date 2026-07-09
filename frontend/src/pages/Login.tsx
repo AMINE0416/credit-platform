@@ -26,8 +26,9 @@ export default function Login() {
             } else {
                 navigate("/agent/dashboard");
             }
-        } catch (err) {
-            setError("Email ou mot de passe incorrect");
+        } catch (err: any) {
+            setError(err.message || "Email ou mot de passe incorrect");
+            console.error("Erreur de connexion:", err);
         } finally {
             setLoading(false);
         }
