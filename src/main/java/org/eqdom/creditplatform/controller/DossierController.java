@@ -91,7 +91,7 @@ public class DossierController {
     @GetMapping("/{id}")
     public ResponseEntity<DossierDetailDTO> getDossier(@PathVariable Long id) {
         try {
-            Dossier dossier = dossierRepository.findByIdWithRelations(id)
+            Dossier dossier = dossierRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Dossier introuvable: " + id));
             
             return ResponseEntity.ok(new DossierDetailDTO(dossier));
@@ -122,7 +122,7 @@ public class DossierController {
 
             System.out.println("DEBUG: currentUser ID = " + currentUserEntity.getId() + ", email = " + currentUserEntity.getEmail());
 
-            Dossier dossier = dossierRepository.findByIdWithRelations(id)
+            Dossier dossier = dossierRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Dossier introuvable: " + id));
 
             System.out.println("DEBUG: dossier.agentAssigne = " + (dossier.getAgentAssigne() != null ? dossier.getAgentAssigne().getId() : "NULL"));

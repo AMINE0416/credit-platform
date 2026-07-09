@@ -4,8 +4,7 @@ import org.eqdom.creditplatform.model.Dossier;
 import org.eqdom.creditplatform.model.StatutDossier;
 import org.eqdom.creditplatform.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.EntityGraph;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,10 +13,6 @@ public interface DossierRepository extends JpaRepository<Dossier, Long> {
     List<Dossier> findByStatutActuel(StatutDossier statut);
     Optional<Dossier> findByCreditId(Long creditId);
     
-    @Query("SELECT DISTINCT d FROM Dossier d " +
-           "LEFT JOIN FETCH d.credit c " +
-           "LEFT JOIN FETCH c.client " +
-           "LEFT JOIN FETCH d.agentAssigne " +
-           "WHERE d.id = :id")
-    Optional<Dossier> findByIdWithRelations(@Param("id") Long id);
+    @EntityGraph(attributePaths = {"credit", "credit.client", "agentAssigne"})
+    Optional<Dossier> findById(Long id);
 }

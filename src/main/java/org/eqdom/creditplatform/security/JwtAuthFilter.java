@@ -42,7 +42,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+                System.out.println("DEBUG: JWT auth set for user " + email);
+            } else {
+                System.err.println("DEBUG: JWT token invalid for user " + email);
             }
+        } else {
+            System.out.println("DEBUG: Skipping JWT filter - email null or auth already set");
         }
         filterChain.doFilter(request, response);
     }

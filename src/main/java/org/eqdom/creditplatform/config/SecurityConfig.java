@@ -64,6 +64,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/imports/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/dossiers/affectation").hasRole("ADMIN")
                         .requestMatchers("/api/reporting/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/dossiers/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/dossiers/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
