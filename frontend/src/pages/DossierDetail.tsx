@@ -161,9 +161,11 @@ export default function DossierDetail() {
     return (
         <div className="fiche-page">
             <header className="fiche-header">
-                <span>Centre_Aouad</span>
+                <div className="header-left">
+                    <img src={eqdomLogo} alt="eqdom" className="eqdom-logo" />
+                    <span className="center-name">Centre_Aouad</span>
+                </div>
                 <div className="fiche-header-logo">
-                    <img className="logo-image" src={eqdomLogo} alt="Logo Eqdom" />
                     <div className="logo-text"><strong>eqdom</strong><small>L'essentiel, c'est vous.</small></div>
                 </div>
                 <div style={{marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px'}}>
