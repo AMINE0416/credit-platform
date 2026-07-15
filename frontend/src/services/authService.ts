@@ -16,10 +16,21 @@ export async function login(email: string, password: string): Promise<LoginRespo
     } catch (error: any) {
         if (error.response) {
             // Erreur retournée par le serveur
-            throw new Error(error.response.data || "Email ou mot de passe incorrect");
+            const status = error.response.status;
+            const message = error.response.data || "Une erreur est survenue";
+            
+            if (status === 401) {
+                throw new Error("Email ou mot de passe incorrect");
+            } else if (status === 403) {
+                throw new Error(typeof message === 'string' ? message : "Accès refusé");
+            } else if (status === 500) {
+                throw new Error("Erreur serveur. Veuillez réessayer.");
+            } else {
+                throw new Error(typeof message === 'string' ? message : "Erreur d'authentification");
+            }
         } else if (error.request) {
             // Pas de réponse du serveur
-            throw new Error("Impossible de contacter le serveur. Vérifiez que le backend est démarré.");
+            throw new Error("Impossible de contacter le serveur. Vérifiez que le backend est démarré sur le port 8081.");
         } else {
             // Autre erreur
             throw new Error("Une erreur est survenue lors de la connexion");

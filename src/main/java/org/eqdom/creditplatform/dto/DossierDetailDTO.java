@@ -11,10 +11,12 @@ public class DossierDetailDTO {
     private String statut;
     private ClientDTO client;
     private CreditDTO credit;
+    private Long nbActions;
 
-    public DossierDetailDTO(Dossier dossier) {
+    public DossierDetailDTO(Dossier dossier, long nbActions) {
         this.dossierId = dossier.getId();
         this.statut = dossier.getStatutActuel().name();
+        this.nbActions = nbActions;
         
         try {
             Credit credit = dossier.getCredit();
@@ -37,6 +39,7 @@ public class DossierDetailDTO {
     public String getStatut() { return statut; }
     public ClientDTO getClient() { return client; }
     public CreditDTO getCredit() { return credit; }
+    public Long getNbActions() { return nbActions; }
 
     public static class ClientDTO {
         private Long id;

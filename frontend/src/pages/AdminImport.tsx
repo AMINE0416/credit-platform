@@ -28,9 +28,8 @@ export default function AdminImport() {
 
             <div className="import-card">
                 <p className="import-hint">
-                    Le fichier doit contenir les colonnes obligatoires : cin, nom, prenom, telephone, adresse,
-                    ville, agence, reference_contrat, type_credit, segment, mensualite, encours, impaye_montant,
-                    impaye_nb_echeances, stage.
+                    Le fichier doit contenir les colonnes obligatoires : num_cin1, nom,	prenom,	cli_tel, TEL2,	cli_adr, Lib_Ville,	cod_age, lib_age, Adresse_Cadrage,	ANC_REFDO,	From_Prov,	GEST_CIN,	CSP_PDT, Segment,	nbr_imp	, Mensualite,	encours, Mnt_Imp,	prv_cum, stage,	DVR,  Reecheance,	Immatriculation.
+
                 </p>
                 <input type="file" accept=".xlsx,.xls" onChange={e => setFile(e.target.files?.[0] || null)} />
                 <button className="btn-primary" onClick={handleImport} disabled={!file || loading}>

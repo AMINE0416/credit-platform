@@ -63,6 +63,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
                         .requestMatchers("/api/imports/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/dossiers/affectation").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/dossiers/export/excel").hasRole("ADMIN")
                         .requestMatchers("/api/reporting/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/dossiers/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/dossiers/**").authenticated()
@@ -77,13 +78,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-            // Allow dev frontend origins, and also permit patterns (useful if ports change)
-            config.setAllowedOriginPatterns(List.of("http://localhost:5173", "http://localhost:5174", "http://localhost:*", "*"));
-            config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+            // Allow dev frontend origins with specific patterns
+            config.setAllowedOriginPatterns(List.of("http://localhost:*", "http://127.0.0.1:*"));
+            config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
             config.setAllowedHeaders(List.of("*"));
             // Expose Authorization header so frontend can read it if present
             config.setExposedHeaders(List.of("Authorization"));
             config.setAllowCredentials(true);
+            config.setMaxAge(3600L); // Cache preflight for 1 hour
 
             UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
             source.registerCorsConfiguration("/**", config);

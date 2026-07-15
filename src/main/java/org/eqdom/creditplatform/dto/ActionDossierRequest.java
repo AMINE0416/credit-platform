@@ -1,5 +1,7 @@
 package org.eqdom.creditplatform.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import org.eqdom.creditplatform.model.NatureAction;
@@ -8,35 +10,81 @@ import org.eqdom.creditplatform.model.CodeResultat;
 import org.eqdom.creditplatform.model.Recidive;
 
 public class ActionDossierRequest {
-    private NatureAction natureAction;
-    private MotifImpaye motifImpaye;
+    @JsonProperty("natureAction")
+    private String natureActionStr;
+    
+    @JsonProperty("motifImpaye")
+    private String motifImpayeStr;
+    
     private String compteRendu;
-    private CodeResultat codeResultat;
-    private Recidive recidive;
+    
+    @JsonProperty("codeResultat")
+    private String codeResultatStr;
+    
+    @JsonProperty("recidive")
+    private String recidiveStr;
+    
     private Integer nbreActionClient;
     private BigDecimal montantPromesse;
     private LocalDate datePromesse;
     private String nouveauTelephone;
-    private String nouveauStatut; // NOUVEAU, EN_COURS, PROMESSE, INJOIGNABLE, REGULARISE, CLOTURE
+    private String nouveauStatut;
 
-    public NatureAction getNatureAction() { return natureAction; }
-    public void setNatureAction(NatureAction natureAction) { this.natureAction = natureAction; }
-    public MotifImpaye getMotifImpaye() { return motifImpaye; }
-    public void setMotifImpaye(MotifImpaye motifImpaye) { this.motifImpaye = motifImpaye; }
+    // Getters pour les enums (utilisés par le contrôleur) - Ignorés par Jackson
+    @JsonIgnore
+    public NatureAction getNatureAction() {
+        return (natureActionStr != null && !natureActionStr.trim().isEmpty()) 
+            ? NatureAction.valueOf(natureActionStr) 
+            : null;
+    }
+    
+    @JsonIgnore
+    public MotifImpaye getMotifImpaye() {
+        return (motifImpayeStr != null && !motifImpayeStr.trim().isEmpty()) 
+            ? MotifImpaye.valueOf(motifImpayeStr) 
+            : null;
+    }
+    
+    @JsonIgnore
+    public CodeResultat getCodeResultat() {
+        return (codeResultatStr != null && !codeResultatStr.trim().isEmpty()) 
+            ? CodeResultat.valueOf(codeResultatStr) 
+            : null;
+    }
+    
+    @JsonIgnore
+    public Recidive getRecidive() {
+        return (recidiveStr != null && !recidiveStr.trim().isEmpty()) 
+            ? Recidive.valueOf(recidiveStr) 
+            : null;
+    }
+    
+    // Getters pour les strings (utilisés par TransitionService et Jackson)
+    public String getNatureActionStr() { return natureActionStr; }
+    public String getMotifImpayeStr() { return motifImpayeStr; }
+    public String getCodeResultatStr() { return codeResultatStr; }
+    public String getRecidiveStr() { return recidiveStr; }
+    
+    public void setNatureActionStr(String natureActionStr) { this.natureActionStr = natureActionStr; }
+    public void setMotifImpayeStr(String motifImpayeStr) { this.motifImpayeStr = motifImpayeStr; }
+    public void setCodeResultatStr(String codeResultatStr) { this.codeResultatStr = codeResultatStr; }
+    public void setRecidiveStr(String recidiveStr) { this.recidiveStr = recidiveStr; }
+    
     public String getCompteRendu() { return compteRendu; }
     public void setCompteRendu(String compteRendu) { this.compteRendu = compteRendu; }
-    public CodeResultat getCodeResultat() { return codeResultat; }
-    public void setCodeResultat(CodeResultat codeResultat) { this.codeResultat = codeResultat; }
-    public Recidive getRecidive() { return recidive; }
-    public void setRecidive(Recidive recidive) { this.recidive = recidive; }
+    
     public Integer getNbreActionClient() { return nbreActionClient; }
     public void setNbreActionClient(Integer nbreActionClient) { this.nbreActionClient = nbreActionClient; }
+    
     public BigDecimal getMontantPromesse() { return montantPromesse; }
     public void setMontantPromesse(BigDecimal montantPromesse) { this.montantPromesse = montantPromesse; }
+    
     public LocalDate getDatePromesse() { return datePromesse; }
     public void setDatePromesse(LocalDate datePromesse) { this.datePromesse = datePromesse; }
+    
     public String getNouveauTelephone() { return nouveauTelephone; }
     public void setNouveauTelephone(String nouveauTelephone) { this.nouveauTelephone = nouveauTelephone; }
+    
     public String getNouveauStatut() { return nouveauStatut; }
     public void setNouveauStatut(String nouveauStatut) { this.nouveauStatut = nouveauStatut; }
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getKpis } from "../services/reportingService";
+import { exportExcel } from "../services/dossierService";
 import type { Kpis } from "../services/reportingService";
 import "./AdminHome.css";
 
@@ -15,16 +16,38 @@ const statutColors: Record<string, string> = {
 
 export default function AdminHome() {
     const [kpis, setKpis] = useState<Kpis | null>(null);
+    const [exporting, setExporting] = useState(false);
 
     useEffect(() => {
         getKpis().then(setKpis).catch(console.error);
     }, []);
 
+    const handleExportExcel = async () => {
+        try {
+            setExporting(true);
+            await exportExcel();
+        } catch (error) {
+            console.error("Erreur lors de l'export Excel:", error);
+            alert("Erreur lors de l'export Excel");
+        } finally {
+            setExporting(false);
+        }
+    };
+
     if (!kpis) return <div>Chargement...</div>;
 
     return (
         <div>
-            <h2 className="page-title">Tableau de bord</h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+                <h2 className="page-title" style={{ margin: 0 }}>Tableau de bord</h2>
+                <button 
+                    className="btn btn-primary" 
+                    onClick={handleExportExcel}
+                    disabled={exporting}
+                >
+                    {exporting ? "Export en cours..." : "📊 Exporter en Excel"}
+                </button>
+            </div>
 
             <div className="kpi-grid">
                 <div className="kpi-card">

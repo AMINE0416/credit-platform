@@ -1,45 +1,153 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getDossier, saveAction } from "../services/dossierService";
-import type { DossierDetail as DossierDetailType } from "../services/dossierService";
+import { getDossier, saveAction, getTransitionsAutorisees } from "../services/dossierService";
+import { getRoles } from "../services/authService";
+import type { DossierDetail as DossierDetailType, TransitionInfo, ChampsRequis } from "../services/dossierService";
 import "./DossierDetail.css";
 import eqdomLogo from "../assets/eqdom.jpg";
 
 export default function DossierDetail() {
     const { id } = useParams();
     const [dossier, setDossier] = useState<DossierDetailType | null>(null);
+    const [transitionInfo, setTransitionInfo] = useState<TransitionInfo | null>(null);
+    const [champsRequis, setChampsRequis] = useState<ChampsRequis | null>(null);
+    
+    // Vérifier si l'utilisateur est ADMIN (lecture seule) ou AGENT (peut saisir)
+    const userRoles = getRoles();
+    const isAdmin = userRoles.includes("ADMIN");
+    const isAgent = userRoles.includes("AGENT");
+    const canEdit = isAgent && !isAdmin; // Seuls les agents peuvent modifier
 
     const [natureAction, setNatureAction] = useState("");
     const [motifImpaye, setMotifImpaye] = useState("");
     const [compteRendu, setCompteRendu] = useState("");
     const [codeResultat, setCodeResultat] = useState("");
     const [recidive, setRecidive] = useState(false);
-    const [nbreActionClient, setNbreActionClient] = useState("");
     const [montantPromesse, setMontantPromesse] = useState("");
     const [datePromesse, setDatePromesse] = useState("");
     const [nouveauTelephone, setNouveauTelephone] = useState("");
+    const [nouveauStatut, setNouveauStatut] = useState(""); // Le statut DOIT être choisi en premier
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        if (id) getDossier(Number(id)).then(setDossier).catch(console.error);
+        if (id) {
+            getDossier(Number(id)).then(setDossier).catch(console.error);
+        }
     }, [id]);
 
+    // Charger les transitions autorisées au chargement du dossier (seulement pour les agents)
+    useEffect(() => {
+        if (id && dossier && canEdit) {
+            getTransitionsAutorisees(Number(id)).then(setTransitionInfo).catch(console.error);
+        }
+    }, [id, dossier?.statut, canEdit]);
+
+    // Charger les champs requis quand le nouveau statut change (seulement pour les agents)
+    useEffect(() => {
+        if (id && nouveauStatut && canEdit) {
+            getTransitionsAutorisees(Number(id), nouveauStatut)
+                .then(info => {
+                    setChampsRequis(info.champsRequis);
+                    
+                    // Pré-cocher "Récidive = Oui" si transition INJOIGNABLE → INJOIGNABLE
+                    if (dossier?.statut === "INJOIGNABLE" && nouveauStatut === "INJOIGNABLE") {
+                        setRecidive(true);
+                    }
+                })
+                .catch(console.error);
+        } else {
+            setChampsRequis(null);
+        }
+    }, [id, nouveauStatut, dossier?.statut, canEdit]);
+
     const handleSave = async () => {
-        if (!id) return;
+        if (!id || !dossier) return;
+        
+        // Validation du nouveau statut (obligatoire)
+        if (!nouveauStatut) {
+            alert("Veuillez sélectionner le nouveau statut du dossier");
+            return;
+        }
+        
+        // Validation des champs obligatoires selon les règles métier
+        if (!natureAction) {
+            alert("Nature Action est obligatoire");
+            return;
+        }
+        if (!codeResultat) {
+            alert("Code résultat est obligatoire");
+            return;
+        }
+        
+        // Validation conditionnelle selon champsRequis
+        if (champsRequis) {
+            if (champsRequis.compteRenduObligatoire && (!compteRendu || compteRendu.trim() === "")) {
+                alert("Compte rendu est obligatoire pour cette transition");
+                return;
+            }
+            if (champsRequis.motifImpayeObligatoire && !motifImpaye) {
+                alert("Motif Impayé est obligatoire pour cette transition");
+                return;
+            }
+            if (champsRequis.recidiveObligatoire && recidive === null) {
+                alert("Récidive est obligatoire pour cette transition");
+                return;
+            }
+            if (champsRequis.montantPromesseObligatoire && !montantPromesse) {
+                alert("Montant de la promesse est obligatoire pour passer en PROMESSE");
+                return;
+            }
+            if (champsRequis.datePromesseObligatoire && !datePromesse) {
+                alert("Date de la promesse est obligatoire pour passer en PROMESSE");
+                return;
+            }
+        }
+        
         setSaving(true);
         try {
             await saveAction(Number(id), {
-                natureAction, motifImpaye, compteRendu, codeResultat,
-                recidive, nbreActionClient: Number(nbreActionClient) || null,
+                natureAction: natureAction,
+                motifImpaye: motifImpaye || "",
+                compteRendu: compteRendu.trim() || "",
+                codeResultat: codeResultat,
+                recidive: recidive ? "OUI" : "NON",
+                nbreActionClient: null, // Calculé automatiquement côté backend
                 montantPromesse: montantPromesse ? Number(montantPromesse) : null,
                 datePromesse: datePromesse || null,
-                nouveauTelephone: nouveauTelephone || null,
-                nouveauStatut: montantPromesse && datePromesse ? "PROMESSE" : "EN_COURS",
+                nouveauTelephone: nouveauTelephone.trim() || null,
+                nouveauStatut: nouveauStatut,
             });
-            alert("Action enregistrée avec succès");
+            
+            alert(`Action enregistrée avec succès\nNouveau statut: ${nouveauStatut}`);
+            
+            // Réinitialiser le formulaire
+            setNatureAction("");
+            setMotifImpaye("");
+            setCompteRendu("");
+            setCodeResultat("");
+            setRecidive(false);
+            setMontantPromesse("");
+            setDatePromesse("");
+            setNouveauTelephone("");
+            setNouveauStatut("");
+            setChampsRequis(null);
+            
+            // Recharger les données du dossier
             getDossier(Number(id)).then(setDossier);
-        } catch (e) {
-            alert("Erreur lors de l'enregistrement");
+        } catch (e: any) {
+            const errorMsg = e.response?.data;
+            // Gérer différents types de réponse d'erreur
+            let displayMsg = "Erreur lors de l'enregistrement";
+            
+            if (typeof errorMsg === 'string') {
+                displayMsg = errorMsg;
+            } else if (errorMsg && typeof errorMsg === 'object') {
+                displayMsg = errorMsg.message || JSON.stringify(errorMsg);
+            }
+            
+            alert(displayMsg);
+            console.error("Erreur complète:", e);
+            console.error("Réponse backend:", e.response);
         } finally {
             setSaving(false);
         }
@@ -48,15 +156,36 @@ export default function DossierDetail() {
     if (!dossier) return <div className="loading">Chargement...</div>;
 
     const { client, credit } = dossier;
+    const isFormDisabled = dossier.statut === "CLOTURE" || !canEdit; // Désactiver pour CLOTURE ou si ADMIN
 
     return (
         <div className="fiche-page">
             <header className="fiche-header">
                 <span>Centre_Aouad</span>
                 <div className="fiche-header-logo">
-
                     <img className="logo-image" src={eqdomLogo} alt="Logo Eqdom" />
                     <div className="logo-text"><strong>eqdom</strong><small>L'essentiel, c'est vous.</small></div>
+                </div>
+                <div style={{marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px'}}>
+                    <span style={{fontWeight: 'bold'}}>Statut actuel:</span>
+                    <span style={{
+                        padding: '5px 12px',
+                        borderRadius: '4px',
+                        fontWeight: 'bold',
+                        backgroundColor: 
+                            dossier.statut === 'NOUVEAU' ? '#3498db' :
+                            dossier.statut === 'EN_COURS' ? '#f39c12' :
+                            dossier.statut === 'PROMESSE' ? '#9b59b6' :
+                            dossier.statut === 'INJOIGNABLE' ? '#e74c3c' :
+                            dossier.statut === 'REGULARISE' ? '#2ecc71' :
+                            dossier.statut === 'CLOTURE' ? '#95a5a6' : '#666',
+                        color: 'white'
+                    }}>
+                        {dossier.statut}
+                    </span>
+                    <span style={{color: '#666', fontSize: '0.9em'}}>
+                        (Actions: {dossier.nbActions})
+                    </span>
                 </div>
             </header>
 
@@ -98,73 +227,184 @@ export default function DossierDetail() {
                 <div className="fiche-col fiche-col-input">
                     <h3>Données à Saisir</h3>
 
-                    <label>Nature Action</label>
-                    <select value={natureAction} onChange={(e) => setNatureAction(e.target.value)}>
-                        <option value="">-- Sélectionner --</option>
-                        <option value="APPEL_SORTANT">Appel sortant</option>
-                        <option value="APPEL_ENTRANT">Appel entrant (client rappelle)</option>
-                        <option value="SMS_RELANCE">SMS de relance</option>
-                        <option value="EMAIL_RELANCE">Email de relance</option>
-                        <option value="VISITE_TERRAIN">Visite terrain</option>
-                        <option value="COURRIER_MISE_EN_DEMEURE">Courrier / mise en demeure</option>
-                        <option value="RELANCE_VIA_TIERS">Relance via tiers (garant, entourage)</option>
-                    </select>
+                    {!canEdit && (
+                        <div style={{padding: '10px', backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '4px', marginBottom: '15px', color: '#856404'}}>
+                            ℹ️ Mode consultation : Les administrateurs ne peuvent que visualiser les dossiers. Seuls les agents peuvent effectuer des saisies.
+                        </div>
+                    )}
 
-                    <label>Motif Impayé</label>
-                    <select value={motifImpaye} onChange={(e) => setMotifImpaye(e.target.value)}>
-                        <option value="">-- Sélectionner --</option>
-                        <option value="PERTE_EMPLOI">Perte d'emploi</option>
-                        <option value="DIFFICULTE_FINANCIERE_TEMPORAIRE">Difficulté financière temporaire</option>
-                        <option value="LITIGE_VEHICULE_PRODUIT">Litige sur le véhicule/produit</option>
-                        <option value="DECES_EMPRUNTEUR">Décès de l'emprunteur</option>
-                        <option value="MALADIE_HOSPITALISATION">Maladie / hospitalisation</option>
-                        <option value="OUBLI_PAIEMENT">Oubli de paiement</option>
-                        <option value="CONTESTATION_MONTANT">Contestation du montant</option>
-                        <option value="CLIENT_INJOIGNABLE">Client injoignable (motif inconnu)</option>
-                        <option value="AUTRE">Autre</option>
-                    </select>
+                    {isFormDisabled && dossier.statut === "CLOTURE" && (
+                        <div style={{padding: '10px', backgroundColor: '#f8d7da', border: '1px solid #f5c6cb', borderRadius: '4px', marginBottom: '15px', color: '#721c24'}}>
+                            ⚠️ Ce dossier est CLOTURÉ, aucune modification n'est possible.
+                        </div>
+                    )}
 
-                    <label>Compte rendu</label>
-                    <textarea value={compteRendu} onChange={(e) => setCompteRendu(e.target.value)} rows={3} />
+                    {/* Afficher le formulaire seulement si l'utilisateur est agent */}
+                    {canEdit && (
+                        <>
+                            {/* NOUVEAU STATUT - À CHOISIR EN PREMIER */}
+                            <label>Nouveau statut du dossier <span style={{color: 'red'}}>*</span></label>
+                            <select 
+                                value={nouveauStatut} 
+                                onChange={(e) => setNouveauStatut(e.target.value)}
+                                disabled={isFormDisabled}
+                                required
+                                style={{backgroundColor: nouveauStatut ? '#e8f5e9' : 'white', fontWeight: nouveauStatut ? 'bold' : 'normal'}}
+                            >
+                                <option value="">-- Sélectionner d'abord le statut --</option>
+                                {transitionInfo?.transitionsAutorisees.map(statut => (
+                                    <option key={statut} value={statut}>
+                                        {statut}
+                                    </option>
+                                ))}
+                            </select>
+                            <small style={{color: '#666', fontSize: '0.85em', display: 'block', marginBottom: '10px'}}>
+                                {!nouveauStatut && "⚠️ Choisissez d'abord vers quel statut vous voulez faire évoluer ce dossier"}
+                                {nouveauStatut && `Les champs ci-dessous sont adaptés pour la transition ${dossier.statut} → ${nouveauStatut}`}
+                            </small>
 
-                    <label>Code resultat</label>
-                    <select value={codeResultat} onChange={(e) => setCodeResultat(e.target.value)}>
-                        <option value="">-- Sélectionner --</option>
-                        <option value="RC">RC - Right Contact</option>
-                        <option value="RPC">RPC - Right Party Contact</option>
-                        <option value="NRP">NRP - No Right Party</option>
-                        <option value="NRC">NRC - No Reply Contact</option>
-                        <option value="NUM_INVALIDE">NUM_INVALIDE - Numéro invalide/hors service</option>
-                        <option value="REFUS">REFUS - Client refuse de payer</option>
-                        <option value="DIFFERE">DIFFERE - Client demande un délai</option>
-                        <option value="REGLE">REGLE - Client confirme paiement effectué</option>
-                    </select>
+                            {/* Afficher le reste du formulaire seulement si un statut est choisi */}
+                            {nouveauStatut && champsRequis && (
+                                <>
+                            {/* NATURE ACTION - Toujours obligatoire */}
+                            <label>Nature Action <span style={{color: 'red'}}>*</span></label>
+                            <select value={natureAction} onChange={(e) => setNatureAction(e.target.value)} disabled={isFormDisabled} required>
+                                <option value="">-- Sélectionner --</option>
+                                <option value="APPEL_SORTANT">Appel sortant</option>
+                                <option value="APPEL_ENTRANT">Appel entrant (client rappelle)</option>
+                                <option value="SMS_RELANCE">SMS de relance</option>
+                                <option value="EMAIL_RELANCE">Email de relance</option>
+                                <option value="VISITE_TERRAIN">Visite terrain</option>
+                                <option value="COURRIER_MISE_EN_DEMEURE">Courrier / mise en demeure</option>
+                                <option value="RELANCE_VIA_TIERS">Relance via tiers (garant, entourage)</option>
+                            </select>
 
-                    <label>Récidive O/N</label>
-                    <select value={recidive ? "O" : "N"} onChange={(e) => setRecidive(e.target.value === "O")}>
-                        <option value="N">Non</option>
-                        <option value="O">Oui</option>
-                    </select>
+                            {/* MOTIF IMPAYE - Conditionnel */}
+                            {champsRequis.motifImpayeVisible && (
+                                <>
+                                    <label>Motif Impayé {champsRequis.motifImpayeObligatoire && <span style={{color: 'red'}}>*</span>}</label>
+                                    <select value={motifImpaye} onChange={(e) => setMotifImpaye(e.target.value)} disabled={isFormDisabled} required={champsRequis.motifImpayeObligatoire}>
+                                        <option value="">-- Sélectionner --</option>
+                                        <option value="PERTE_EMPLOI">Perte d'emploi</option>
+                                        <option value="DIFFICULTE_FINANCIERE_TEMPORAIRE">Difficulté financière temporaire</option>
+                                        <option value="LITIGE_VEHICULE_PRODUIT">Litige sur le véhicule/produit</option>
+                                        <option value="DECES_EMPRUNTEUR">Décès de l'emprunteur</option>
+                                        <option value="MALADIE_HOSPITALISATION">Maladie / hospitalisation</option>
+                                        <option value="OUBLI_PAIEMENT">Oubli de paiement</option>
+                                        <option value="CONTESTATION_MONTANT">Contestation du montant</option>
+                                        <option value="CLIENT_INJOIGNABLE">Client injoignable (motif inconnu)</option>
+                                        <option value="AUTRE">Autre</option>
+                                    </select>
+                                </>
+                            )}
 
-                    <label>Nbre Action Client</label>
-                    <input type="number" value={nbreActionClient} onChange={(e) => setNbreActionClient(e.target.value)} />
+                            {/* COMPTE RENDU - Conditionnel */}
+                            <label>Compte rendu {champsRequis.compteRenduObligatoire && <span style={{color: 'red'}}>*</span>}</label>
+                            <textarea 
+                                value={compteRendu} 
+                                onChange={(e) => setCompteRendu(e.target.value)} 
+                                rows={3} 
+                                disabled={isFormDisabled}
+                                required={champsRequis.compteRenduObligatoire}
+                                placeholder={champsRequis.compteRenduObligatoire ? "Décrivez l'action effectuée..." : "Optionnel pour cette transition"}
+                            />
 
-                    <label>Montant de la promesse</label>
-                    <input type="number" value={montantPromesse} onChange={(e) => setMontantPromesse(e.target.value)} />
+                            {/* CODE RESULTAT - Toujours obligatoire */}
+                            <label>Code resultat <span style={{color: 'red'}}>*</span></label>
+                            <select value={codeResultat} onChange={(e) => setCodeResultat(e.target.value)} disabled={isFormDisabled} required>
+                                <option value="">-- Sélectionner --</option>
+                                <option value="RC">RC - Right Contact</option>
+                                <option value="RPC">RPC - Right Party Contact</option>
+                                <option value="NRP">NRP - No Right Party</option>
+                                <option value="NRC">NRC - No Reply Contact</option>
+                                <option value="NUM_INVALIDE">NUM_INVALIDE - Numéro invalide/hors service</option>
+                                <option value="REFUS">REFUS - Client refuse de payer</option>
+                                <option value="DIFFERE">DIFFERE - Client demande un délai</option>
+                                <option value="REGLE">REGLE - Client confirme paiement effectué</option>
+                            </select>
 
-                    <label>Date de la promesse</label>
-                    <input type="date" value={datePromesse} onChange={(e) => setDatePromesse(e.target.value)} />
+                            {/* RECIDIVE - Conditionnel */}
+                            {champsRequis.recidiveVisible && (
+                                <>
+                                    <label>Récidive O/N {champsRequis.recidiveObligatoire && <span style={{color: 'red'}}>*</span>}</label>
+                                    <select 
+                                        value={recidive ? "O" : "N"} 
+                                        onChange={(e) => setRecidive(e.target.value === "O")} 
+                                        disabled={isFormDisabled}
+                                        required={champsRequis.recidiveObligatoire}
+                                    >
+                                        <option value="N">Non</option>
+                                        <option value="O">Oui</option>
+                                    </select>
+                                </>
+                            )}
 
-                    <label>Nouveau téléphone qualifié</label>
-                    <input value={nouveauTelephone} onChange={(e) => setNouveauTelephone(e.target.value)} />
+                            {/* MONTANT PROMESSE - Conditionnel */}
+                            {champsRequis.montantPromesseVisible && (
+                                <>
+                                    <label>Montant de la promesse {champsRequis.montantPromesseObligatoire && <span style={{color: 'red'}}>*</span>}</label>
+                                    <input 
+                                        type="number" 
+                                        value={montantPromesse} 
+                                        onChange={(e) => setMontantPromesse(e.target.value)} 
+                                        disabled={isFormDisabled}
+                                        required={champsRequis.montantPromesseObligatoire}
+                                        placeholder="Ex: 3520" 
+                                    />
+                                </>
+                            )}
+
+                            {/* DATE PROMESSE - Conditionnel */}
+                            {champsRequis.datePromesseVisible && (
+                                <>
+                                    <label>Date de la promesse {champsRequis.datePromesseObligatoire && <span style={{color: 'red'}}>*</span>}</label>
+                                    <input 
+                                        type="date" 
+                                        value={datePromesse} 
+                                        onChange={(e) => setDatePromesse(e.target.value)} 
+                                        disabled={isFormDisabled}
+                                        required={champsRequis.datePromesseObligatoire}
+                                    />
+                                </>
+                            )}
+
+                            {/* NOUVEAU TELEPHONE - Toujours visible, optionnel */}
+                            {champsRequis.nouveauTelephoneVisible && (
+                                <>
+                                    <label>Nouveau téléphone qualifié</label>
+                                    <input 
+                                        value={nouveauTelephone} 
+                                        onChange={(e) => setNouveauTelephone(e.target.value)} 
+                                        disabled={isFormDisabled}
+                                        placeholder="Ex: +212612345678" 
+                                    />
+                                </>
+                            )}
+                                </>
+                            )}
+                        </>
+                    )}
+
+                    {/* Message pour les admins */}
+                    {!canEdit && (
+                        <div style={{padding: '20px', textAlign: 'center', color: '#666'}}>
+                            <p>Consultez l'historique des actions dans l'onglet approprié.</p>
+                        </div>
+                    )}
                 </div>
             </div>
 
             <div className="fiche-actions">
-                <button className="btn-enregistrer" onClick={handleSave} disabled={saving}>
-                    {saving ? "Enregistrement..." : "Enregistrer"}
-                </button>
-                <button className="btn-exporter">Exporter</button>
+                {canEdit && (
+                    <button 
+                        className="btn-enregistrer" 
+                        onClick={handleSave} 
+                        disabled={saving || isFormDisabled || !nouveauStatut}
+                    >
+                        {saving ? "Enregistrement..." : "Enregistrer"}
+                    </button>
+                )}
+                {/* Bouton Exporter retiré comme demandé */}
             </div>
         </div>
     );
