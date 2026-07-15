@@ -97,12 +97,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(135deg, #d94f30 0%, #b8321a 50%, #8b1a0a 100%);
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--primary-light) 100%);
     padding: 18px 40px;
     color: white;
     backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255, 200, 150, 0.1);
-    box-shadow: 0 8px 32px rgba(217, 79, 48, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(30, 64, 175, 0.2);
 }
 
 .login-header-title {
@@ -194,18 +194,18 @@
 }
 
 .login-card {
-    background: rgba(20, 15, 35, 0.85);
+    background: rgba(20, 15, 35, 0.9);
     backdrop-filter: blur(20px);
     border-radius: 16px;
-    box-shadow: 0 8px 40px rgba(217, 79, 48, 0.25), 
-                0 0 60px rgba(217, 79, 48, 0.1),
+    box-shadow: 0 8px 40px rgba(30, 64, 175, 0.25), 
+                0 0 60px rgba(30, 64, 175, 0.1),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
     padding: 40px;
     width: 380px;
     display: flex;
     flex-direction: column;
-    border: 1px solid rgba(217, 79, 48, 0.3);
-    border-top: 2px solid rgba(255, 200, 150, 0.5);
+    border: 1px solid rgba(30, 64, 175, 0.3);
+    border-top: 3px solid rgba(59, 130, 246, 0.8);
     position: relative;
     overflow: hidden;
 }
@@ -241,9 +241,10 @@
 
 .login-card h2 {
     margin: 0 0 4px;
-    color: #ff9966;
+    color: #60A5FA;
     font-size: 24px;
     font-weight: 700;
+    letter-spacing: -0.5px;
 }
 
 .login-subtitle {
@@ -264,7 +265,7 @@
 }
 
 .login-card input {
-    border: 1px solid rgba(217, 79, 48, 0.25);
+    border: 1px solid rgba(30, 64, 175, 0.25);
     border-radius: 8px;
     padding: 13px 16px;
     font-size: 14px;
@@ -281,21 +282,21 @@
 
 .login-card input:focus {
     outline: none;
-    border-color: #ff8a5b;
-    background: rgba(217, 79, 48, 0.12);
-    box-shadow: 0 0 0 4px rgba(217, 79, 48, 0.15), 
-                0 0 20px rgba(217, 79, 48, 0.15),
-                inset 0 0 15px rgba(217, 79, 48, 0.08);
+    border-color: #60A5FA;
+    background: rgba(30, 64, 175, 0.12);
+    box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.15), 
+                0 0 20px rgba(30, 64, 175, 0.15),
+                inset 0 0 15px rgba(30, 64, 175, 0.08);
 }
 
 .login-card input:hover:not(:focus) {
-    border-color: rgba(217, 79, 48, 0.4);
+    border-color: rgba(30, 64, 175, 0.4);
     background: rgba(255, 255, 255, 0.08);
 }
 
 .login-card button {
     margin-top: 28px;
-    background: linear-gradient(135deg, #d94f30 0%, #ff6b4a 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
     color: white;
     border: none;
     border-radius: 8px;
@@ -304,8 +305,8 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 6px 20px rgba(217, 79, 48, 0.35), 
-                0 0 20px rgba(217, 79, 48, 0.15);
+    box-shadow: 0 6px 20px rgba(30, 64, 175, 0.35), 
+                0 0 20px rgba(30, 64, 175, 0.15);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     position: relative;
@@ -326,8 +327,8 @@
 
 .login-card button:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 30px rgba(217, 79, 48, 0.5), 
-                0 0 30px rgba(217, 79, 48, 0.25);
+    box-shadow: 0 10px 30px rgba(30, 64, 175, 0.5), 
+                0 0 30px rgba(30, 64, 175, 0.25);
 }
 
 .login-card button:hover::before {
