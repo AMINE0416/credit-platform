@@ -3,15 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { getMesDossiers } from "../services/dossierService";
 import { logout } from "../services/authService";
 import type { DossierListItem } from "../services/dossierService";
+import eqdomLogo from "../assets/eqdom.jpg";
 import "./AgentDashboard.css";
 
 const statutColors: Record<string, string> = {
-  NOUVEAU: "#3498db",
-  EN_COURS: "#f39c12",
-  PROMESSE: "#9b59b6",
-  INJOIGNABLE: "#7f8c8d",
-  REGULARISE: "#27ae60",
-  CLOTURE: "#2c3e50",
+  NOUVEAU: "#FF1744",
+  EN_COURS: "#FF6D00",
+  PROMESSE: "#D500F9",
+  INJOIGNABLE: "#9E9E9E",
+  REGULARISE: "#00C853",
+  CLOTURE: "#424242",
 };
 
 export default function AgentDashboard() {
@@ -31,16 +32,19 @@ export default function AgentDashboard() {
   return (
       <div className="agent-page">
         <header className="agent-header">
-          <span>Centre_Aouad</span>
+          <div className="header-left">
+            <img src={eqdomLogo} alt="eqdom" className="eqdom-logo" />
+            <span className="center-name">Centre_Aouad</span>
+          </div>
           <div className="agent-header-right">
             <span className="agent-username">👤 {nom}</span>
             <button className="logout-btn-agent" onClick={handleLogout} title="Se déconnecter">
               🚪 Déconnexion
             </button>
-            <div className="agent-header-logo">
-              <span className="logo-circle">C</span>
-              <div className="logo-text"><strong>eqdom</strong><small>L'essentiel, c'est vous.</small></div>
-            </div>
+          </div>
+          <div className="agent-header-logo">
+            <span className="logo-circle">C</span>
+            <div className="logo-text"><strong>eqdom</strong><small>L'essentiel, c'est vous.</small></div>
           </div>
         </header>
 

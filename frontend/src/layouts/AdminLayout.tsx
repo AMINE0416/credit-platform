@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { logout } from "../services/authService";
+import eqdomLogo from "../assets/eqdom.jpg";
 import "./AdminLayout.css";
 
 export default function AdminLayout() {
@@ -13,7 +14,10 @@ export default function AdminLayout() {
     return (
         <div className="admin-layout">
             <header className="admin-header">
-                <span>Centre_Aouad</span>
+                <div className="header-left">
+                    <img src={eqdomLogo} alt="eqdom" className="eqdom-logo" />
+                    <span className="center-name">Centre_Aouad</span>
+                </div>
                 <div className="admin-header-right">
                     <span className="admin-username">{nom}</span>
                     <div className="logo-block">

@@ -37,9 +37,11 @@ export default function Login() {
     return (
         <div className="login-page">
             <div className="login-header">
-                <span className="login-header-title">Centre_Aouad</span>
+                <div className="header-left">
+                    <img src={eqdomLogo} alt="eqdom" className="eqdom-logo-main" />
+                    <span className="login-header-title">Centre_Aouad</span>
+                </div>
                 <div className="login-header-logo">
-                    <img className="logo-image" src={eqdomLogo} alt="Logo Eqdom" />
                     <div className="logo-text">
                         <strong>eqdom</strong>
                         <small>L'essentiel, c'est vous.</small>

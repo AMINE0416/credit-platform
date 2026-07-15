@@ -1,39 +1,39 @@
 :root {
-  /* Primary colors - eqdom brand */
-  --primary: #1E40AF;
-  --primary-light: #3B82F6;
-  --primary-dark: #1E3A8A;
+  /* Primary colors - eqdom brand RED */
+  --primary: #FF1744;
+  --primary-light: #FF5252;
+  --primary-dark: #C41C3B;
   
   /* Accent colors */
-  --accent-green: #10B981;
-  --accent-orange: #F97316;
+  --accent-green: #00C853;
+  --accent-orange: #FF6D00;
   --accent-lime: #BFFF00;
-  --accent-purple: #8B5CF6;
+  --accent-purple: #D500F9;
   
   /* Status colors */
-  --status-new: #3B82F6;
-  --status-progress: #F59E0B;
-  --status-promise: #8B5CF6;
-  --status-unreachable: #6B7280;
-  --status-regularized: #10B981;
-  --status-closed: #1F2937;
+  --status-new: #FF1744;
+  --status-progress: #FF6D00;
+  --status-promise: #D500F9;
+  --status-unreachable: #9E9E9E;
+  --status-regularized: #00C853;
+  --status-closed: #424242;
   
   /* Neutrals */
-  --text: #4B5563;
-  --text-h: #1F2937;
+  --text: #424242;
+  --text-h: #212121;
   --bg: #FFFFFF;
-  --bg-alt: #F8FAFC;
-  --border: #E2E8F0;
-  --border-light: #F1F5F9;
+  --bg-alt: #FAFAFA;
+  --border: #EEEEEE;
+  --border-light: #F5F5F5;
   
   /* Code/preformatted */
-  --code-bg: #F1F5F9;
+  --code-bg: #F5F5F5;
   
-  /* Shadows */
-  --shadow-sm: rgba(0, 0, 0, 0.05) 0 1px 2px 0;
-  --shadow-md: rgba(0, 0, 0, 0.1) 0 4px 6px -1px, rgba(0, 0, 0, 0.1) 0 2px 4px -1px;
-  --shadow-lg: rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-  --shadow-xl: rgba(0, 0, 0, 0.1) 0 20px 25px -5px, rgba(0, 0, 0, 0.1) 0 10px 10px -5px;
+  /* Shadows with red tint */
+  --shadow-sm: rgba(255, 23, 68, 0.08) 0 1px 2px 0;
+  --shadow-md: rgba(255, 23, 68, 0.12) 0 4px 6px -1px, rgba(255, 23, 68, 0.1) 0 2px 4px -1px;
+  --shadow-lg: rgba(255, 23, 68, 0.16) 0 10px 15px -3px, rgba(255, 23, 68, 0.12) 0 4px 6px -2px;
+  --shadow-xl: rgba(255, 23, 68, 0.2) 0 20px 25px -5px, rgba(255, 23, 68, 0.15) 0 10px 10px -5px;
 
   /* Fonts */
   --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
@@ -57,23 +57,23 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --primary: #60A5FA;
-    --primary-light: #93C5FD;
-    --primary-dark: #1E40AF;
+    --primary: #FF5252;
+    --primary-light: #FF6D6D;
+    --primary-dark: #FF1744;
     
-    --text: #CBD5E1;
-    --text-h: #F1F5F9;
-    --bg: #0F172A;
-    --bg-alt: #1E293B;
-    --border: #334155;
-    --border-light: #475569;
+    --text: #E0E0E0;
+    --text-h: #FFFFFF;
+    --bg: #121212;
+    --bg-alt: #1E1E1E;
+    --border: #2C2C2C;
+    --border-light: #383838;
     
-    --code-bg: #1E293B;
+    --code-bg: #1E1E1E;
     
-    --shadow-sm: rgba(0, 0, 0, 0.3) 0 1px 2px 0;
-    --shadow-md: rgba(0, 0, 0, 0.3) 0 4px 6px -1px, rgba(0, 0, 0, 0.3) 0 2px 4px -1px;
-    --shadow-lg: rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.3) 0 4px 6px -2px;
-    --shadow-xl: rgba(0, 0, 0, 0.5) 0 20px 25px -5px, rgba(0, 0, 0, 0.3) 0 10px 10px -5px;
+    --shadow-sm: rgba(255, 23, 68, 0.2) 0 1px 2px 0;
+    --shadow-md: rgba(255, 23, 68, 0.25) 0 4px 6px -1px, rgba(255, 23, 68, 0.2) 0 2px 4px -1px;
+    --shadow-lg: rgba(255, 23, 68, 0.3) 0 10px 15px -3px, rgba(255, 23, 68, 0.25) 0 4px 6px -2px;
+    --shadow-xl: rgba(255, 23, 68, 0.4) 0 20px 25px -5px, rgba(255, 23, 68, 0.3) 0 10px 10px -5px;
   }
 }
 
