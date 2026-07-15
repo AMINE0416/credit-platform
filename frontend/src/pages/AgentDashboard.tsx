@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMesDossiers } from "../services/dossierService";
+import { logout } from "../services/authService";
 import type { DossierListItem } from "../services/dossierService";
 import "./AgentDashboard.css";
 
@@ -16,18 +17,30 @@ const statutColors: Record<string, string> = {
 export default function AgentDashboard() {
   const [dossiers, setDossiers] = useState<DossierListItem[]>([]);
   const navigate = useNavigate();
+  const nom = localStorage.getItem("nom") || "Agent";
 
   useEffect(() => {
     getMesDossiers().then(setDossiers).catch(console.error);
   }, []);
 
+  const handleLogout = () => {
+    logout();
+    window.location.href = "/login";
+  };
+
   return (
       <div className="agent-page">
         <header className="agent-header">
           <span>Centre_Aouad</span>
-          <div className="agent-header-logo">
-            <span className="logo-circle">C</span>
-            <div className="logo-text"><strong>eqdom</strong><small>L'essentiel, c'est vous.</small></div>
+          <div className="agent-header-right">
+            <span className="agent-username">👤 {nom}</span>
+            <button className="logout-btn-agent" onClick={handleLogout} title="Se déconnecter">
+              🚪 Déconnexion
+            </button>
+            <div className="agent-header-logo">
+              <span className="logo-circle">C</span>
+              <div className="logo-text"><strong>eqdom</strong><small>L'essentiel, c'est vous.</small></div>
+            </div>
           </div>
         </header>
 
