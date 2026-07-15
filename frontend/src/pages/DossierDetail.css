@@ -1,53 +1,113 @@
 .fiche-page {
     min-height: 100vh;
-    background: #f4f4f4;
-    font-family: "Segoe UI", Arial, sans-serif;
+    background: var(--bg-alt);
+    font-family: var(--sans);
+    display: flex;
+    flex-direction: column;
 }
 
 .fiche-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(135deg, #d94f30, #b8321a);
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
     padding: 16px 40px;
     color: white;
     font-weight: 600;
+    box-shadow: var(--shadow-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.fiche-header-logo { display: flex; align-items: center; gap: 10px; }
-.logo-circle {
-    background: white; color: #d94f30; width: 30px; height: 30px;
-    border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;
+.fiche-header-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
 }
-.logo-text { display: flex; flex-direction: column; line-height: 1.1; }
-.logo-text strong { font-size: 15px; }
-.logo-text small { font-size: 9px; opacity: 0.85; }
+
+.logo-circle {
+    background: white;
+    color: var(--primary);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.logo-text strong {
+    font-size: 16px;
+    letter-spacing: 0.5px;
+}
+
+.logo-text small {
+    font-size: 10px;
+    opacity: 0.85;
+    font-weight: 400;
+}
 
 .fiche-body {
-    background: linear-gradient(180deg, #e0503a, #c94328);
-    padding: 30px;
+    background: var(--bg);
+    padding: 32px 40px;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 24px;
+    gap: 28px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.fiche-col {
+    background: var(--bg-alt);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
 }
 
 .fiche-col h3 {
-    color: white;
-    border-bottom: 2px solid rgba(255,255,255,0.4);
-    padding-bottom: 8px;
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 12px;
     margin-bottom: 16px;
-    font-size: 15px;
+    font-size: 16px;
+    font-weight: 600;
 }
 
-.field-group { margin-bottom: 10px; }
+.fiche-col-input {
+    border: 2px solid var(--primary);
+    background: linear-gradient(135deg, var(--bg-alt) 0%, var(--bg) 100%);
+}
+
+.fiche-col-input h3 {
+    color: var(--primary-dark);
+}
+
+.field-group {
+    margin-bottom: 12px;
+}
+
 .field-group label,
 .fiche-col-input label {
     display: block;
-    color: white;
-    font-size: 11px;
+    color: var(--text-h);
+    font-size: 12px;
     font-weight: 600;
-    margin-bottom: 3px;
-    margin-top: 8px;
+    margin-bottom: 6px;
+    margin-top: 12px;
+    letter-spacing: 0.2px;
 }
 
 .field-group input,
@@ -56,60 +116,86 @@
 .fiche-col-input select,
 .fiche-col-input textarea {
     width: 100%;
-    border: none;
-    border-radius: 3px;
-    padding: 7px 10px;
-    font-size: 13px;
-    background: #eaeaea;
-    color: #222;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--text-h);
     box-sizing: border-box;
+    font-family: var(--sans);
+    transition: all 0.3s ease;
 }
 
-/* Ensure read-only fields remain readable on colored backgrounds */
 .field-group input[readonly],
 .field-group textarea[readonly] {
-    color: #222;
-    background: #f5f5f5;
+    color: var(--text);
+    background: var(--bg-alt);
+    cursor: not-allowed;
 }
 
 .fiche-col-input input,
 .fiche-col-input select,
 .fiche-col-input textarea {
     background: white;
-    border: 1px solid #ccc;
+    border: 1.5px solid var(--primary);
 }
 
 .fiche-col-input input:focus,
+.fiche-col-input select:focus,
 .fiche-col-input textarea:focus {
     outline: none;
-    border-color: #ffd6cc;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+    background: white;
 }
 
 .fiche-actions {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    padding: 20px 30px;
-    background: #f4f4f4;
+    padding: 20px 40px;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
 }
 
-.btn-enregistrer, .btn-exporter {
-    padding: 10px 24px;
+.btn-enregistrer,
+.btn-exporter {
+    padding: 12px 24px;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
 }
 
 .btn-enregistrer {
-    background: linear-gradient(135deg, #d94f30, #b8321a);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
     color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-enregistrer:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
 }
 
 .btn-exporter {
     background: white;
-    border: 1px solid #d94f30;
-    color: #d94f30;
+    border: 1.5px solid var(--primary);
+    color: var(--primary);
 }
 
-.loading { padding: 40px; text-align: center; }
+.btn-exporter:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.loading {
+    padding: 40px;
+    text-align: center;
+    color: var(--text-h);
+    font-weight: 500;
+}
