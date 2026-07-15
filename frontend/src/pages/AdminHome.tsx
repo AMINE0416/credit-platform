@@ -10,8 +10,8 @@ const statutLabels: Record<string, string> = {
 };
 
 const statutColors: Record<string, string> = {
-    NOUVEAU: "#3498db", EN_COURS: "#f39c12", PROMESSE: "#9b59b6",
-    INJOIGNABLE: "#7f8c8d", REGULARISE: "#27ae60", CLOTURE: "#2c3e50",
+    NOUVEAU: "#FF1744", EN_COURS: "#FF6D00", PROMESSE: "#D500F9",
+    INJOIGNABLE: "#9E9E9E", REGULARISE: "#00C853", CLOTURE: "#424242",
 };
 
 export default function AdminHome() {

@@ -11,11 +11,32 @@
     justify-content: space-between;
     align-items: center;
     background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-    padding: 16px 40px;
+    padding: 12px 40px;
     color: white;
     font-weight: 600;
-    box-shadow: var(--shadow-md);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-lg);
+    border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.eqdom-logo {
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.center-name {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
 }
 
 .agent-header-logo {
