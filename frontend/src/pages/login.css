@@ -105,9 +105,29 @@
     box-shadow: 0 8px 32px rgba(255, 23, 68, 0.25);
 }
 
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.eqdom-logo-main {
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.eqdom-logo-main:hover {
+    transform: scale(1.05);
+}
+
 .login-header-title {
     font-size: 20px;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .login-header-logo {
