@@ -4,9 +4,9 @@ Application web complète pour la gestion de dossiers de crédit avec authentifi
 
 ## 🏗️ Architecture
 
-- **Backend** : Spring Boot 4.1.0 + MySQL + JWT
+- **Backend** : Spring Boot 4.1.0 + PostgreSQL + JWT
 - **Frontend** : React 19 + Vite + TypeScript + React Router
-- **Déploiement** : Render (Backend) + Vercel (Frontend)
+- **Déploiement** : Render (Backend + PostgreSQL) + Vercel (Frontend)
 
 ## 🚀 Déploiement en Production
 
@@ -47,15 +47,21 @@ Application web complète pour la gestion de dossiers de crédit avec authentifi
 
 - Java 17+
 - Node.js 18+
-- MySQL 8+
+- PostgreSQL 14+ (ou MySQL 8+ si tu préfères)
 - Maven 3.9+
 
 ### Backend
 
 ```bash
-# Créer la base de données
+# Créer la base de données PostgreSQL
+psql -U postgres
+CREATE DATABASE credit_platform;
+\q
+
+# Ou avec MySQL (si tu préfères)
 mysql -u root -p
 CREATE DATABASE credit_platform;
+exit
 
 # Configurer les variables d'environnement (optionnel)
 cp .env.example .env

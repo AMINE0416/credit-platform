@@ -37,16 +37,16 @@ git push origin main
 
 ## ⚡ Étape 3 : Déployer Backend sur Render (10 min)
 
-### 3.1 Créer la Base de Données
+### 3.1 Créer la Base de Données PostgreSQL
 1. Va sur [Render Dashboard](https://dashboard.render.com/)
-2. **New +** → **MySQL**
+2. **New +** → **PostgreSQL**
 3. Remplis :
    - Name : `credit-platform-db`
    - Database : `credit_platform`
    - User : `credit_user`
    - Plan : **Free**
 4. **Create Database**
-5. ✏️ **NOTE** les infos de connexion qui s'affichent
+5. ✏️ **NOTE** l'**Internal Database URL** (commence par `postgresql://...`)
 
 ### 3.2 Créer le Web Service
 1. Sur Render Dashboard : **New +** → **Web Service**
@@ -55,18 +55,18 @@ git push origin main
    - Name : `credit-platform-api`
    - Runtime : **Docker**
    - Plan : **Free**
-4. Clique **Environment** et ajoute ces 8 variables :
+4. Clique **Environment** et ajoute ces 6 variables :
 
 ```
-SPRING_DATASOURCE_URL = jdbc:mysql://[HOST_DE_TA_DB]:3306/credit_platform?useSSL=true&serverTimezone=UTC
-DB_USERNAME = credit_user
-DB_PASSWORD = [TON_PASSWORD_DB]
+DATABASE_URL = [L_INTERNAL_DATABASE_URL_DE_LETAPE_3.1]
 JWT_SECRET = [LE_SECRET_DE_LETAPE_1]
 JWT_EXPIRATION = 7200000
 CORS_ALLOWED_ORIGINS = https://*.vercel.app
 SERVER_PORT = 8081
 JAVA_OPTS = -Xmx512m -Xms256m -Dspring.profiles.active=prod
 ```
+
+> 💡 **Astuce** : Tu peux aussi lier directement la base en utilisant l'option "Add from database"
 
 5. **Create Web Service** → Attendre 5-10 min
 

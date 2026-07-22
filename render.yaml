@@ -18,15 +18,23 @@ services:
       - key: JAVA_OPTS
         value: "-Xmx512m -Xms256m -Dspring.profiles.active=prod"
       
-      # Base de données - À configurer avec votre base MySQL sur Render
-      - key: SPRING_DATASOURCE_URL
-        value: jdbc:mysql://YOUR_DB_HOST:3306/credit_platform?useSSL=true&requireSSL=true&serverTimezone=UTC
+      # Base de données PostgreSQL - Render fournit automatiquement DATABASE_URL
+      - key: DATABASE_URL
+        fromDatabase:
+          name: credit-platform-db
+          property: connectionString
       
+      # Ces variables sont optionnelles si DATABASE_URL est utilisé
+      # Mais peuvent être utiles pour des configurations avancées
       - key: DB_USERNAME
-        sync: false  # À définir manuellement dans Render Dashboard
+        fromDatabase:
+          name: credit-platform-db
+          property: user
       
       - key: DB_PASSWORD
-        sync: false  # À définir manuellement dans Render Dashboard (sensible)
+        fromDatabase:
+          name: credit-platform-db
+          property: password
       
       # JWT - IMPORTANT: Générer un nouveau secret sécurisé
       - key: JWT_SECRET
@@ -46,10 +54,10 @@ services:
     autoDeploy: true
     branch: main
 
-  # Base de données MySQL (optionnel si vous utilisez un service externe)
-  # - type: database
-  #   name: credit-platform-db
-  #   engine: mysql
-  #   plan: free
-  #   databaseName: credit_platform
-  #   user: credit_user
+  # Base de données PostgreSQL
+  - type: pgsql
+    name: credit-platform-db
+    plan: free
+    databaseName: credit_platform
+    user: credit_user
+    ipAllowList: []  # Vide = accessible depuis tous les services Render
