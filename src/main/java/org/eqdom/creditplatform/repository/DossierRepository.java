@@ -10,6 +10,7 @@ import java.util.Optional;
 
 public interface DossierRepository extends JpaRepository<Dossier, Long> {
     List<Dossier> findByAgentAssigne(User agent);
+    long countByAgentAssigne(User agent);
     List<Dossier> findByStatutActuel(StatutDossier statut);
     Optional<Dossier> findByCreditId(Long creditId);
     

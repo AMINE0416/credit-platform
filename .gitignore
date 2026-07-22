@@ -22,7 +22,18 @@ pnpm-debug.log*
 
 # Fichiers d'environnement
 .env
-.env.*
+.env.local
+.env.*.local
+!.env.example
+!.env.development
+!.env.production
+
+# Frontend - fichiers d'environnement
+frontend/.env.local
+frontend/.env.*.local
+
+# ⚠️ NE JAMAIS commiter application.properties avec des secrets réels
+# Utiliser des variables d'environnement en production
 
 # ======================================
 # IntelliJ IDEA

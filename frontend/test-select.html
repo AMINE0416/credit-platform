@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Select Dropdown</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: #f5f5f5;
+        }
+        
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            margin: 0 auto;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        select {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            border: 2px solid #1e40af;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            min-height: 40px;
+            appearance: auto;
+            -webkit-appearance: menulist;
+            -moz-appearance: menulist;
+        }
+        
+        select option {
+            background: white;
+            color: #333;
+            padding: 10px;
+            font-size: 14px;
+        }
+        
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 5px;
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h2>Test du menu déroulant</h2>
+        
+        <label for="test-select">Nouveau statut du dossier *</label>
+        <select id="test-select" onchange="updateInfo(this)">
+            <option value="">-- Sélectionner d'abord le statut --</option>
+            <option value="EN_COURS">EN_COURS</option>
+            <option value="PROMESSE">PROMESSE</option>
+            <option value="INJOIGNABLE">INJOIGNABLE</option>
+            <option value="REGULARISE">REGULARISE</option>
+            <option value="CLOTURE">CLOTURE</option>
+        </select>
+        
+        <div class="info" id="info-box">
+            Aucun statut sélectionné
+        </div>
+    </div>
+    
+    <script>
+        function updateInfo(select) {
+            const infoBox = document.getElementById('info-box');
+            if (select.value) {
+                infoBox.textContent = `Statut sélectionné: ${select.value}`;
+                infoBox.style.background = '#e8f5e9';
+                infoBox.style.color = '#2e7d32';
+            } else {
+                infoBox.textContent = 'Aucun statut sélectionné';
+                infoBox.style.background = '#e3f2fd';
+                infoBox.style.color = '#1976d2';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -2,6 +2,7 @@ package org.eqdom.creditplatform.controller;
 
 import org.eqdom.creditplatform.dto.LoginRequest;
 import org.eqdom.creditplatform.dto.LoginResponse;
+import org.eqdom.creditplatform.exception.UserNotFoundException;
 import org.eqdom.creditplatform.model.User;
 import org.eqdom.creditplatform.repository.UserRepository;
 import org.eqdom.creditplatform.security.JwtUtil;
@@ -32,7 +33,7 @@ public class AuthController {
             
             // Récupérer l'utilisateur
             User user = userRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                    .orElseThrow(() -> new UserNotFoundException("Utilisateur introuvable: " + request.getEmail()));
             
             // Vérifier si l'utilisateur est actif
             if (!user.isActif()) {

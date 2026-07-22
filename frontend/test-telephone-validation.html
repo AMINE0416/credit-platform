@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Validation Téléphone Marocain</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .required {
+            color: #dc3545;
+        }
+
+        input[type="text"],
+        input[type="date"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="date"] {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            letter-spacing: normal;
+            cursor: pointer;
+        }
+
+        input[type="text"]:focus,
+        input[type="date"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input.valid {
+            border-color: #28a745;
+            background-color: #f0fff4;
+        }
+
+        input.invalid {
+            border-color: #dc3545;
+            background-color: #fff5f5;
+        }
+
+        .help-text {
+            display: block;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .help-text.error {
+            color: #dc3545;
+        }
+
+        .help-text.success {
+            color: #28a745;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .examples {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+
+        .examples h3 {
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .examples ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .examples li {
+            padding: 8px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .examples .valid-example {
+            color: #28a745;
+        }
+
+        .examples .invalid-example {
+            color: #dc3545;
+        }
+
+        .icon {
+            margin-right: 5px;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            display: block;
+        }
+
+        .result.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test de Validation - Contexte Marocain</h1>
+        <p class="subtitle">Formulaire de saisie avec validation en temps réel</p>
+
+        <form id="testForm">
+            <!-- Champ Téléphone -->
+            <div class="form-group">
+                <label for="telephone">
+                    Numéro de Téléphone <span class="required">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="telephone" 
+                    name="telephone"
+                    placeholder="Ex: 0612345678"
+                    maxlength="10"
+                    pattern="0[67][0-9]{8}"
+                    title="Le numéro doit contenir 10 chiffres et commencer par 06 ou 07"
+                >
+                <small class="help-text" id="telHelp">
+                    📱 Format : 0612345678 ou 0712345678 (10 chiffres)
+                </small>
+            </div>
+
+            <!-- Champ Date -->
+            <div class="form-group">
+                <label for="datePromesse">
+                    Date de la Promesse <span class="required">*</span>
+                </label>
+                <input 
+                    type="date" 
+                    id="datePromesse" 
+                    name="datePromesse"
+                    required
+                >
+                <small class="help-text">
+                    📅 Cliquez pour ouvrir le calendrier (dates futures uniquement)
+                </small>
+            </div>
+
+            <button type="submit">Valider la Saisie</button>
+        </form>
+
+        <div class="result" id="result"></div>
+
+        <div class="examples">
+            <h3>📋 Exemples de Numéros</h3>
+            <ul>
+                <li class="valid-example">
+                    <span class="icon">✅</span> 0612345678 (valide)
+                </li>
+                <li class="valid-example">
+                    <span class="icon">✅</span> 0723456789 (valide)
+                </li>
+                <li class="invalid-example">
+                    <span class="icon">❌</span> 0512345678 (commence par 05)
+                </li>
+                <li class="invalid-example">
+                    <span class="icon">❌</span> 061234567 (seulement 9 chiffres)
+                </li>
+                <li class="invalid-example">
+                    <span class="icon">❌</span> 06123456789 (11 chiffres)
+                </li>
+                <li class="invalid-example">
+                    <span class="icon">❌</span> +212612345678 (avec préfixe international)
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const telephoneInput = document.getElementById('telephone');
+        const dateInput = document.getElementById('datePromesse');
+        const telHelp = document.getElementById('telHelp');
+        const form = document.getElementById('testForm');
+        const result = document.getElementById('result');
+
+        // Définir la date minimale à aujourd'hui
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.setAttribute('min', today);
+
+        // Validation en temps réel du téléphone
+        telephoneInput.addEventListener('input', function(e) {
+            // Garder seulement les chiffres
+            let value = e.target.value.replace(/[^0-9]/g, '');
+            
+            // Limiter à 10 chiffres
+            if (value.length > 10) {
+                value = value.substring(0, 10);
+            }
+            
+            e.target.value = value;
+
+            // Validation du format
+            const telPattern = /^0[67][0-9]{8}$/;
+            
+            if (value.length === 0) {
+                // Champ vide
+                telephoneInput.classList.remove('valid', 'invalid');
+                telHelp.textContent = '📱 Format : 0612345678 ou 0712345678 (10 chiffres)';
+                telHelp.classList.remove('success', 'error');
+            } else if (telPattern.test(value)) {
+                // Format valide
+                telephoneInput.classList.remove('invalid');
+                telephoneInput.classList.add('valid');
+                telHelp.textContent = '✅ Numéro valide !';
+                telHelp.classList.remove('error');
+                telHelp.classList.add('success');
+            } else {
+                // Format invalide
+                telephoneInput.classList.remove('valid');
+                telephoneInput.classList.add('invalid');
+                
+                // Message d'erreur contextuel
+                if (value.length < 10) {
+                    telHelp.textContent = `⚠️ ${value.length}/10 chiffres saisis`;
+                } else if (!value.startsWith('06') && !value.startsWith('07')) {
+                    telHelp.textContent = '⚠️ Le numéro doit commencer par 06 ou 07';
+                } else {
+                    telHelp.textContent = '⚠️ Format invalide : 10 chiffres commençant par 06 ou 07';
+                }
+                telHelp.classList.remove('success');
+                telHelp.classList.add('error');
+            }
+        });
+
+        // Validation à la soumission du formulaire
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const telephone = telephoneInput.value;
+            const datePromesse = dateInput.value;
+            const telPattern = /^0[67][0-9]{8}$/;
+
+            // Réinitialiser le résultat
+            result.className = 'result';
+            result.style.display = 'none';
+
+            // Validation du téléphone
+            if (!telephone || telephone.trim() === '') {
+                showError('Le numéro de téléphone est obligatoire');
+                return;
+            }
+
+            if (!telPattern.test(telephone)) {
+                showError('Format de téléphone invalide.\nLe numéro doit contenir exactement 10 chiffres et commencer par 06 ou 07.\nExemple : 0612345678 ou 0712345678');
+                return;
+            }
+
+            // Validation de la date
+            if (!datePromesse) {
+                showError('La date de la promesse est obligatoire');
+                return;
+            }
+
+            const selectedDate = new Date(datePromesse);
+            const todayDate = new Date(today);
+            
+            if (selectedDate < todayDate) {
+                showError('La date de la promesse ne peut pas être dans le passé');
+                return;
+            }
+
+            // Tout est valide
+            showSuccess(`✅ Validation réussie !\n\n📱 Téléphone : ${telephone}\n📅 Date de promesse : ${formatDate(datePromesse)}`);
+        });
+
+        function showError(message) {
+            result.className = 'result error';
+            result.textContent = message;
+            result.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            result.className = 'result success';
+            result.textContent = message;
+            result.style.display = 'block';
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('fr-FR', options);
+        }
+
+        // Tester avec des exemples prédéfinis
+        document.querySelectorAll('.valid-example, .invalid-example').forEach(li => {
+            li.style.cursor = 'pointer';
+            li.addEventListener('click', function() {
+                const text = this.textContent.trim();
+                const match = text.match(/\d{10}/);
+                if (match) {
+                    telephoneInput.value = match[0];
+                    telephoneInput.dispatchEvent(new Event('input'));
+                    telephoneInput.focus();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

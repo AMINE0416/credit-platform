@@ -1,6 +1,7 @@
 package org.eqdom.creditplatform.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.eqdom.creditplatform.exception.BusinessException;
 import org.eqdom.creditplatform.model.Client;
 import org.eqdom.creditplatform.model.Credit;
 import org.eqdom.creditplatform.model.Dossier;
@@ -21,17 +22,17 @@ public class DossierDetailDTO {
         try {
             Credit credit = dossier.getCredit();
             if (credit == null) {
-                throw new RuntimeException("Crédit non trouvé pour le dossier " + dossier.getId());
+                throw new BusinessException("Crédit non trouvé pour le dossier " + dossier.getId());
             }
             this.credit = new CreditDTO(credit);
             
             Client client = credit.getClient();
             if (client == null) {
-                throw new RuntimeException("Client non trouvé pour le crédit " + credit.getId());
+                throw new BusinessException("Client non trouvé pour le crédit " + credit.getId());
             }
             this.client = new ClientDTO(client);
         } catch (Exception e) {
-            throw new RuntimeException("Erreur lors du chargement du dossier: " + e.getMessage(), e);
+            throw new BusinessException("Erreur lors du chargement du dossier: " + e.getMessage(), e);
         }
     }
 

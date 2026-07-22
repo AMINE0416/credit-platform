@@ -5,12 +5,14 @@ import { getRoles } from "../services/authService";
 import type { DossierDetail as DossierDetailType, TransitionInfo, ChampsRequis } from "../services/dossierService";
 import "./DossierDetail.css";
 import eqdomLogo from "../assets/eqdom.jpg";
+import DatePromesseSelector from "../components/DatePromesseSelector";
 
 export default function DossierDetail() {
     const { id } = useParams();
     const [dossier, setDossier] = useState<DossierDetailType | null>(null);
     const [transitionInfo, setTransitionInfo] = useState<TransitionInfo | null>(null);
     const [champsRequis, setChampsRequis] = useState<ChampsRequis | null>(null);
+    const [loadingTransitions, setLoadingTransitions] = useState(false);
     
     // Vérifier si l'utilisateur est ADMIN (lecture seule) ou AGENT (peut saisir)
     const userRoles = getRoles();
@@ -38,7 +40,16 @@ export default function DossierDetail() {
     // Charger les transitions autorisées au chargement du dossier (seulement pour les agents)
     useEffect(() => {
         if (id && dossier && canEdit) {
-            getTransitionsAutorisees(Number(id)).then(setTransitionInfo).catch(console.error);
+            setLoadingTransitions(true);
+            getTransitionsAutorisees(Number(id))
+                .then(info => {
+                    console.log("Transitions autorisées:", info);
+                    setTransitionInfo(info);
+                })
+                .catch(err => {
+                    console.error("Erreur lors du chargement des transitions:", err);
+                })
+                .finally(() => setLoadingTransitions(false));
         }
     }, [id, dossier?.statut, canEdit]);
 
@@ -77,6 +88,15 @@ export default function DossierDetail() {
         if (!codeResultat) {
             alert("Code résultat est obligatoire");
             return;
+        }
+        
+        // Validation du numéro de téléphone marocain si fourni
+        if (nouveauTelephone && nouveauTelephone.trim() !== "") {
+            const telPattern = /^0[67][0-9]{8}$/;
+            if (!telPattern.test(nouveauTelephone)) {
+                alert("Format de téléphone invalide.\nLe numéro doit contenir exactement 10 chiffres et commencer par 06 ou 07.\nExemple : 0612345678 ou 0712345678");
+                return;
+            }
         }
         
         // Validation conditionnelle selon champsRequis
@@ -163,10 +183,10 @@ export default function DossierDetail() {
             <header className="fiche-header">
                 <div className="header-left">
                     <img src={eqdomLogo} alt="eqdom" className="eqdom-logo" />
-                    <span className="center-name">Centre_Aouad</span>
-                </div>
-                <div className="fiche-header-logo">
-                    <div className="logo-text"><strong>eqdom</strong><small>L'essentiel, c'est vous.</small></div>
+                    <div className="brand-text">
+                        <span className="brand-name">eqdom</span>
+                        <span className="brand-tagline">L'essentiel, c'est vous.</span>
+                    </div>
                 </div>
                 <div style={{marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px'}}>
                     <span style={{fontWeight: 'bold'}}>Statut actuel:</span>
@@ -246,20 +266,37 @@ export default function DossierDetail() {
                         <>
                             {/* NOUVEAU STATUT - À CHOISIR EN PREMIER */}
                             <label>Nouveau statut du dossier <span style={{color: 'red'}}>*</span></label>
-                            <select 
-                                value={nouveauStatut} 
-                                onChange={(e) => setNouveauStatut(e.target.value)}
-                                disabled={isFormDisabled}
-                                required
-                                style={{backgroundColor: nouveauStatut ? '#e8f5e9' : 'white', fontWeight: nouveauStatut ? 'bold' : 'normal'}}
-                            >
-                                <option value="">-- Sélectionner d'abord le statut --</option>
-                                {transitionInfo?.transitionsAutorisees.map(statut => (
-                                    <option key={statut} value={statut}>
-                                        {statut}
-                                    </option>
-                                ))}
-                            </select>
+                            {loadingTransitions ? (
+                                <div style={{padding: '10px', textAlign: 'center', color: '#666'}}>
+                                    Chargement des statuts disponibles...
+                                </div>
+                            ) : (
+                                <>
+                                    <select 
+                                        value={nouveauStatut} 
+                                        onChange={(e) => setNouveauStatut(e.target.value)}
+                                        disabled={isFormDisabled || !transitionInfo?.transitionsAutorisees || transitionInfo.transitionsAutorisees.length === 0}
+                                        required
+                                        style={{backgroundColor: nouveauStatut ? '#e8f5e9' : 'white', fontWeight: nouveauStatut ? 'bold' : 'normal'}}
+                                    >
+                                        <option value="">
+                                            {transitionInfo?.transitionsAutorisees && transitionInfo.transitionsAutorisees.length > 0 
+                                                ? "-- Sélectionner d'abord le statut --" 
+                                                : "Aucune transition disponible"}
+                                        </option>
+                                        {transitionInfo?.transitionsAutorisees?.map(statut => (
+                                            <option key={statut} value={statut}>
+                                                {statut}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {transitionInfo && transitionInfo.transitionsAutorisees.length > 0 && (
+                                        <small style={{color: '#666', fontSize: '0.85em', display: 'block', marginTop: '5px'}}>
+                                            {transitionInfo.transitionsAutorisees.length} transition(s) disponible(s) depuis {dossier.statut}
+                                        </small>
+                                    )}
+                                </>
+                            )}
                             <small style={{color: '#666', fontSize: '0.85em', display: 'block', marginBottom: '10px'}}>
                                 {!nouveauStatut && "⚠️ Choisissez d'abord vers quel statut vous voulez faire évoluer ce dossier"}
                                 {nouveauStatut && `Les champs ci-dessous sont adaptés pour la transition ${dossier.statut} → ${nouveauStatut}`}
@@ -356,32 +393,58 @@ export default function DossierDetail() {
                                 </>
                             )}
 
-                            {/* DATE PROMESSE - Conditionnel */}
+                            {/* DATE PROMESSE - Conditionnel - CALENDRIER */}
                             {champsRequis.datePromesseVisible && (
                                 <>
                                     <label>Date de la promesse {champsRequis.datePromesseObligatoire && <span style={{color: 'red'}}>*</span>}</label>
-                                    <input 
-                                        type="date" 
-                                        value={datePromesse} 
-                                        onChange={(e) => setDatePromesse(e.target.value)} 
+                                    <DatePromesseSelector
+                                        value={datePromesse}
+                                        onChange={setDatePromesse}
                                         disabled={isFormDisabled}
                                         required={champsRequis.datePromesseObligatoire}
                                     />
                                 </>
                             )}
 
-                            {/* NOUVEAU TELEPHONE - Toujours visible, optionnel */}
+                            {/* NOUVEAU TELEPHONE - Validation Maroc : 10 chiffres commençant par 06 ou 07 */}
                             {champsRequis.nouveauTelephoneVisible && (
                                 <>
                                     <label>Nouveau téléphone qualifié</label>
                                     <input 
                                         value={nouveauTelephone} 
-                                        onChange={(e) => setNouveauTelephone(e.target.value)} 
+                                        onChange={(e) => {
+                                            const value = e.target.value.replace(/[^0-9]/g, ''); // Garder seulement les chiffres
+                                            if (value.length <= 10) {
+                                                setNouveauTelephone(value);
+                                            }
+                                        }} 
                                         disabled={isFormDisabled}
-                                        placeholder="Ex: +212612345678" 
+                                        placeholder="Ex: 0612345678"
+                                        maxLength={10}
+                                        pattern="0[67][0-9]{8}"
+                                        title="Le numéro doit contenir 10 chiffres et commencer par 06 ou 07"
                                     />
+                                    <small style={{
+                                        color: nouveauTelephone && !nouveauTelephone.match(/^0[67][0-9]{8}$/) ? 'red' : '#666', 
+                                        fontSize: '0.85em', 
+                                        display: 'block', 
+                                        marginTop: '5px'
+                                    }}>
+                                        {nouveauTelephone && !nouveauTelephone.match(/^0[67][0-9]{8}$/) 
+                                            ? '⚠️ Format invalide : 10 chiffres commençant par 06 ou 07' 
+                                            : '📱 Format : 0612345678 ou 0712345678 (10 chiffres)'}
+                                    </small>
                                 </>
                             )}
+
+                            {/* BOUTON ENREGISTRER - juste après le téléphone */}
+                            <button 
+                                className="btn-enregistrer-inline" 
+                                onClick={handleSave} 
+                                disabled={saving || isFormDisabled || !nouveauStatut}
+                            >
+                                {saving ? "Enregistrement..." : "Enregistrer"}
+                            </button>
                                 </>
                             )}
                         </>
@@ -396,18 +459,7 @@ export default function DossierDetail() {
                 </div>
             </div>
 
-            <div className="fiche-actions">
-                {canEdit && (
-                    <button 
-                        className="btn-enregistrer" 
-                        onClick={handleSave} 
-                        disabled={saving || isFormDisabled || !nouveauStatut}
-                    >
-                        {saving ? "Enregistrement..." : "Enregistrer"}
-                    </button>
-                )}
-                {/* Bouton Exporter retiré comme demandé */}
-            </div>
+            {/* Actions en bas supprimées car bouton est maintenant intégré dans la colonne */}
         </div>
     );
 }

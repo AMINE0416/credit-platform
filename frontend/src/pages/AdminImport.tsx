@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { importExcel } from "../services/importService";
+import { importExcel, resetDatabase } from "../services/importService";
 import type { ImportRapport } from "../services/importService";
 import "./AdminImport.css";
 
@@ -7,6 +7,7 @@ export default function AdminImport() {
     const [file, setFile] = useState<File | null>(null);
     const [rapport, setRapport] = useState<ImportRapport | null>(null);
     const [loading, setLoading] = useState(false);
+    const [resetLoading, setResetLoading] = useState(false);
 
     const handleImport = async () => {
         if (!file) return;
@@ -22,14 +23,67 @@ export default function AdminImport() {
         }
     };
 
+    const handleReset = async () => {
+        const confirmation = prompt(
+            "⚠️ ATTENTION : Cette action va SUPPRIMER TOUS les dossiers, crédits, clients et agents.\n\n" +
+            "L'admin sera conservé mais toutes les autres données seront perdues.\n\n" +
+            "Tapez 'SUPPRIMER' (en majuscules) pour confirmer:"
+        );
+        
+        if (confirmation !== "SUPPRIMER") {
+            alert("Annulé - Aucune donnée n'a été supprimée");
+            return;
+        }
+        
+        setResetLoading(true);
+        try {
+            const result = await resetDatabase();
+            alert(`✅ Base réinitialisée:\n\n` +
+                  `Supprimé:\n` +
+                  `- ${result.suppressed.actions} actions\n` +
+                  `- ${result.suppressed.dossiers} dossiers\n` +
+                  `- ${result.suppressed.credits} crédits\n` +
+                  `- ${result.suppressed.clients} clients\n` +
+                  `- ${result.suppressed.agents} agents\n\n` +
+                  `Vous pouvez maintenant réimporter votre fichier Excel.`
+            );
+            setRapport(null);
+        } catch (e: any) {
+            alert("Erreur : " + (e.message || "Erreur inconnue"));
+        } finally {
+            setResetLoading(false);
+        }
+    };
+
     return (
         <div>
             <h2 className="page-title">Import du fichier Excel</h2>
 
+            {/* 🆕 Bouton de réinitialisation de la base */}
+            <div className="import-card" style={{ marginBottom: "20px", backgroundColor: "#ffe5e5", borderLeft: "4px solid #dc3545" }}>
+                <h3 style={{ color: "#dc3545", display: "flex", alignItems: "center", gap: "8px" }}>
+                    ⚠️ Zone Dangereuse
+                </h3>
+                <p className="import-hint" style={{ color: "#721c24" }}>
+                    <strong>Réinitialiser la base de données</strong> supprimera TOUS les dossiers, crédits, clients et agents.
+                    L'utilisateur admin sera conservé. Utilisez cette fonction pour repartir de zéro avant un nouvel import.
+                </p>
+                <button 
+                    className="btn-primary" 
+                    onClick={handleReset} 
+                    disabled={resetLoading}
+                    style={{ backgroundColor: "#dc3545", border: "none" }}
+                >
+                    {resetLoading ? "Suppression en cours..." : "🗑️ Réinitialiser la base de données"}
+                </button>
+            </div>
+
             <div className="import-card">
                 <p className="import-hint">
-                    Le fichier doit contenir les colonnes obligatoires : num_cin1, nom,	prenom,	cli_tel, TEL2,	cli_adr, Lib_Ville,	cod_age, lib_age, Adresse_Cadrage,	ANC_REFDO,	From_Prov,	GEST_CIN,	CSP_PDT, Segment,	nbr_imp	, Mensualite,	encours, Mnt_Imp,	prv_cum, stage,	DVR,  Reecheance,	Immatriculation.
-
+                    Le fichier doit contenir les colonnes obligatoires : num_cin1, nom, prenom, cli_tel, TEL2, cli_adr, Lib_Ville, cod_age, lib_age, Adresse_Cadrage, ANC_REFDO, From_Prov, GEST_CIN, CSP_PDT, Segment, nbr_imp, Mensualite, encours, Mnt_Imp, prv_cum, stage, DVR, Reecheance, Immatriculation.
+                    <br /><br />
+                    <strong>📌 Affectation automatique :</strong> Les dossiers sont automatiquement affectés aux agents lors de l'import. 
+                    Si une colonne "Agent_Email" est présente, les dossiers seront assignés à l'agent correspondant (l'agent sera créé automatiquement s'il n'existe pas).
                 </p>
                 <input type="file" accept=".xlsx,.xls" onChange={e => setFile(e.target.files?.[0] || null)} />
                 <button className="btn-primary" onClick={handleImport} disabled={!file || loading}>

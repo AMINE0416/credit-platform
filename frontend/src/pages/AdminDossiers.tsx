@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getDossiers, affecterDossiers } from "../services/dossierService";
+import { getDossiers, affecterDossiers, supprimerDossier } from "../services/dossierService";
 import type { DossierListItem } from "../services/dossierService";
 import { getUsers } from "../services/userService";
 import type { UserDTO } from "../services/userService";
@@ -18,13 +18,18 @@ export default function AdminDossiers() {
     const [filterStatut, setFilterStatut] = useState("");
     const [filterVille, setFilterVille] = useState("");
     const [agentCible, setAgentCible] = useState<number | "">("");
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
     const loadDossiers = () => {
+        setLoading(true);
         getDossiers({
             statut: filterStatut || undefined,
             ville: filterVille || undefined,
-        }).then(setDossiers).catch(console.error);
+        })
+            .then(setDossiers)
+            .catch(console.error)
+            .finally(() => setLoading(false));
     };
 
     useEffect(() => { loadDossiers(); }, [filterStatut, filterVille]);
@@ -48,6 +53,41 @@ export default function AdminDossiers() {
     };
 
     const villes = [...new Set(dossiers.map(d => d.ville))];
+
+    const handleSupprimerSelected = async () => {
+        if (selected.length === 0) {
+            alert("Sélectionnez au moins un dossier à supprimer");
+            return;
+        }
+
+        const confirmDelete = window.confirm(
+            `Êtes-vous sûr de vouloir supprimer ${selected.length} dossier(s) ? Cette action est irréversible.`
+        );
+
+        if (!confirmDelete) return;
+
+        try {
+            let supprimis = 0;
+            let erreurs = 0;
+
+            for (const id of selected) {
+                try {
+                    await supprimerDossier(id);
+                    supprimis++;
+                } catch (error) {
+                    console.error(`Erreur suppression dossier ${id}:`, error);
+                    erreurs++;
+                }
+            }
+
+            alert(`${supprimis} dossier(s) supprimé(s)${erreurs > 0 ? ` - ${erreurs} erreur(s)` : ""}`);
+            setSelected([]);
+            loadDossiers();
+        } catch (error) {
+            console.error("Erreur lors de la suppression:", error);
+            alert("Erreur lors de la suppression des dossiers");
+        }
+    };
 
     return (
         <div>
@@ -76,42 +116,54 @@ export default function AdminDossiers() {
                     <button className="btn-primary" onClick={handleAffecter}>
                         Affecter ({selected.length})
                     </button>
+                    <button className="btn-danger" onClick={handleSupprimerSelected} style={{marginLeft: '12px'}}>
+                        🗑️ Supprimer ({selected.length})
+                    </button>
                 </div>
             </div>
 
-            <table className="admin-table">
-                <thead>
-                <tr>
-                    <th></th>
-                    <th>CIN</th>
-                    <th>Nom complet</th>
-                    <th>Référence contrat</th>
-                    <th>Ville</th>
-                    <th>Agent assigné</th>
-                    <th>Statut</th>
-                    <th></th>
-                </tr>
-                </thead>
-                <tbody>
-                {dossiers.map(d => (
-                    <tr key={d.id}>
-                        <td><input type="checkbox" checked={selected.includes(d.id)} onChange={() => toggleSelect(d.id)} /></td>
-                        <td>{d.cin}</td>
-                        <td>{d.nomComplet}</td>
-                        <td>{d.referenceContrat}</td>
-                        <td>{d.ville}</td>
-                        <td>{d.agentAssigne}</td>
-                        <td>
-                            <span className="badge" style={{ background: statutColors[d.statut] }}>{d.statut}</span>
-                        </td>
-                        <td><button className="btn-open" onClick={() => navigate(`/agent/dossiers/${d.id}`)}>Ouvrir</button></td>
-                    </tr>
-                ))}
-                {dossiers.length === 0 && (
-                    <tr><td colSpan={8} className="empty">Aucun dossier trouvé</td></tr>
-                )}
-                </tbody>
-            </table>
+            {loading ? (
+                <div className="loading-container">
+                    <div className="spinner"></div>
+                    <p>Chargement des dossiers...</p>
+                </div>
+            ) : (
+                <div className="table-container">
+                    <table className="admin-table">
+                        <thead>
+                        <tr>
+                            <th></th>
+                            <th>CIN</th>
+                            <th>Nom complet</th>
+                            <th>Référence contrat</th>
+                            <th>Ville</th>
+                            <th>Agent assigné</th>
+                            <th>Statut</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {dossiers.map(d => (
+                            <tr key={d.id}>
+                                <td><input type="checkbox" checked={selected.includes(d.id)} onChange={() => toggleSelect(d.id)} /></td>
+                                <td>{d.cin}</td>
+                                <td>{d.nomComplet}</td>
+                                <td>{d.referenceContrat}</td>
+                                <td>{d.ville}</td>
+                                <td>{d.agentAssigne}</td>
+                                <td>
+                                    <span className="badge" style={{ background: statutColors[d.statut] }}>{d.statut}</span>
+                                </td>
+                                <td><button className="btn-open" onClick={() => navigate(`/agent/dossiers/${d.id}`)}>Ouvrir</button></td>
+                            </tr>
+                        ))}
+                        {dossiers.length === 0 && (
+                            <tr><td colSpan={8} className="empty">Aucun dossier trouvé</td></tr>
+                        )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </div>
     );
 }

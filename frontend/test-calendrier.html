@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Calendrier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #1e40af;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            background: white;
+            color: #333;
+            -webkit-appearance: auto;
+            -moz-appearance: auto;
+            appearance: auto;
+        }
+        
+        input[type="date"]:focus {
+            outline: none;
+            border-color: #1e3a8a;
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        }
+        
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            font-size: 20px;
+            opacity: 1;
+            padding: 5px;
+        }
+        
+        .info {
+            background: #e0f2fe;
+            border-left: 4px solid #0284c7;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+        
+        .info h3 {
+            margin-top: 0;
+            color: #0369a1;
+        }
+        
+        .info ul {
+            margin-bottom: 0;
+        }
+        
+        .info li {
+            margin: 8px 0;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #dcfce7;
+            border: 1px solid #86efac;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+        }
+        
+        button {
+            background: #1e40af;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background: #1e3a8a;
+        }
+        
+        .browser-info {
+            margin-top: 30px;
+            padding: 15px;
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            border-radius: 4px;
+        }
+        
+        .test-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .test-buttons button {
+            flex: 1;
+            background: #6366f1;
+            padding: 10px;
+            font-size: 14px;
+        }
+        
+        .test-buttons button:hover {
+            background: #4f46e5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗓️ Test du Calendrier HTML5</h1>
+        
+        <div class="form-group">
+            <label for="dateTest1">Date Standard (type="date")</label>
+            <input 
+                type="date" 
+                id="dateTest1"
+                name="dateTest1"
+            />
+            <small style="color: #666; display: block; margin-top: 5px;">
+                ℹ️ Cliquez sur l'icône de calendrier à droite
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label for="dateTest2">Date avec Minimum (aujourd'hui)</label>
+            <input 
+                type="date" 
+                id="dateTest2"
+                name="dateTest2"
+            />
+            <small style="color: #666; display: block; margin-top: 5px;">
+                ℹ️ Seules les dates futures sont sélectionnables
+            </small>
+        </div>
+        
+        <div class="test-buttons">
+            <button onclick="setToday()">📅 Aujourd'hui</button>
+            <button onclick="setTomorrow()">➡️ Demain</button>
+            <button onclick="setNextWeek()">⏭️ Dans 7 jours</button>
+        </div>
+        
+        <button onclick="validateForm()" style="width: 100%; margin-top: 20px;">
+            ✅ Valider les Dates
+        </button>
+        
+        <div class="result" id="result"></div>
+        
+        <div class="info">
+            <h3>📋 Comment utiliser le calendrier :</h3>
+            <ul>
+                <li><strong>Cliquez</strong> sur l'icône 📅 à droite du champ</li>
+                <li><strong>Tapez directement</strong> la date au format : JJ/MM/AAAA ou AAAA-MM-JJ</li>
+                <li><strong>Utilisez les flèches</strong> du clavier pour naviguer</li>
+                <li><strong>Utilisez les boutons</strong> ci-dessus pour tester rapidement</li>
+            </ul>
+        </div>
+        
+        <div class="browser-info">
+            <h3 style="margin-top: 0;">🌐 Information Navigateur</h3>
+            <p><strong>Navigateur :</strong> <span id="browserInfo"></span></p>
+            <p><strong>Support du calendrier :</strong> <span id="dateSupport"></span></p>
+            <p style="margin-bottom: 0;"><strong>Note :</strong> Si le calendrier ne s'affiche pas, essayez Chrome, Edge ou Firefox (versions récentes).</p>
+        </div>
+    </div>
+
+    <script>
+        // Définir la date minimale à aujourd'hui pour le deuxième champ
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('dateTest2').setAttribute('min', today);
+        
+        // Afficher les informations du navigateur
+        document.getElementById('browserInfo').textContent = navigator.userAgent.split('(')[1].split(')')[0];
+        
+        // Tester le support du type date
+        const dateInput = document.createElement('input');
+        dateInput.setAttribute('type', 'date');
+        const isSupported = dateInput.type === 'date';
+        
+        const supportSpan = document.getElementById('dateSupport');
+        if (isSupported) {
+            supportSpan.textContent = '✅ Supporté';
+            supportSpan.style.color = '#16a34a';
+            supportSpan.style.fontWeight = 'bold';
+        } else {
+            supportSpan.textContent = '❌ Non supporté - Mettez à jour votre navigateur';
+            supportSpan.style.color = '#dc2626';
+            supportSpan.style.fontWeight = 'bold';
+        }
+        
+        // Fonctions de test
+        function setToday() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dateTest1').value = today;
+            document.getElementById('dateTest2').value = today;
+            showSuccess('Dates définies à aujourd\'hui : ' + formatDate(today));
+        }
+        
+        function setTomorrow() {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const dateStr = tomorrow.toISOString().split('T')[0];
+            document.getElementById('dateTest1').value = dateStr;
+            document.getElementById('dateTest2').value = dateStr;
+            showSuccess('Dates définies à demain : ' + formatDate(dateStr));
+        }
+        
+        function setNextWeek() {
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            const dateStr = nextWeek.toISOString().split('T')[0];
+            document.getElementById('dateTest1').value = dateStr;
+            document.getElementById('dateTest2').value = dateStr;
+            showSuccess('Dates définies dans 7 jours : ' + formatDate(dateStr));
+        }
+        
+        function validateForm() {
+            const date1 = document.getElementById('dateTest1').value;
+            const date2 = document.getElementById('dateTest2').value;
+            
+            if (!date1 || !date2) {
+                showError('❌ Veuillez sélectionner les deux dates !');
+                return;
+            }
+            
+            const selectedDate = new Date(date2);
+            const todayDate = new Date(today);
+            
+            if (selectedDate < todayDate) {
+                showError('❌ La date 2 ne peut pas être dans le passé !');
+                return;
+            }
+            
+            showSuccess(`✅ Validation réussie !\n\nDate 1 : ${formatDate(date1)}\nDate 2 : ${formatDate(date2)}`);
+        }
+        
+        function showSuccess(message) {
+            const result = document.getElementById('result');
+            result.textContent = message;
+            result.style.background = '#dcfce7';
+            result.style.borderColor = '#86efac';
+            result.style.color = '#166534';
+            result.classList.add('show');
+        }
+        
+        function showError(message) {
+            const result = document.getElementById('result');
+            result.textContent = message;
+            result.style.background = '#fee2e2';
+            result.style.borderColor = '#fca5a5';
+            result.style.color = '#991b1b';
+            result.classList.add('show');
+        }
+        
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            return date.toLocaleDateString('fr-FR', options);
+        }
+        
+        // Écouter les changements de date
+        document.getElementById('dateTest1').addEventListener('change', function(e) {
+            if (e.target.value) {
+                console.log('Date 1 sélectionnée:', e.target.value);
+                showSuccess('Date 1 : ' + formatDate(e.target.value));
+            }
+        });
+        
+        document.getElementById('dateTest2').addEventListener('change', function(e) {
+            if (e.target.value) {
+                console.log('Date 2 sélectionnée:', e.target.value);
+                showSuccess('Date 2 : ' + formatDate(e.target.value));
+            }
+        });
+    </script>
+</body>
+</html>

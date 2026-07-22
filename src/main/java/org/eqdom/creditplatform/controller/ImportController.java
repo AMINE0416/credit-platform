@@ -1,15 +1,25 @@
 package org.eqdom.creditplatform.controller;
 
 import org.eqdom.creditplatform.dto.ImportRapport;
+import org.eqdom.creditplatform.exception.BusinessException;
+import org.eqdom.creditplatform.repository.ActionDossierRepository;
 import org.eqdom.creditplatform.repository.ClientRepository;
 import org.eqdom.creditplatform.repository.CreditRepository;
 import org.eqdom.creditplatform.repository.DossierRepository;
+import org.eqdom.creditplatform.repository.UserRepository;
+import org.eqdom.creditplatform.repository.RoleRepository;
 import org.eqdom.creditplatform.model.Client;
 import org.eqdom.creditplatform.model.Credit;
 import org.eqdom.creditplatform.model.Dossier;
 import org.eqdom.creditplatform.model.StatutDossier;
+import org.eqdom.creditplatform.model.User;
+import org.eqdom.creditplatform.model.Role;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.apache.poi.ss.usermodel.*;
@@ -17,19 +27,124 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/imports")
+@PreAuthorize("hasAuthority('ADMIN')")
 public class ImportController {
 
+    private static final Logger log = LoggerFactory.getLogger(ImportController.class);
+
+    @Autowired private ActionDossierRepository actionDossierRepository;
     @Autowired private ClientRepository clientRepository;
     @Autowired private CreditRepository creditRepository;
     @Autowired private DossierRepository dossierRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private RoleRepository roleRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
 
+    /**
+     * Endpoint pour réinitialiser complètement la base de données
+     * Supprime TOUS les dossiers, crédits, clients et agents (mais garde l'admin)
+     * ⚠️ ATTENTION : OPÉRATION IRRÉVERSIBLE ⚠️
+     */
+    @DeleteMapping("/reset-database")
+    public ResponseEntity<?> resetDatabase() {
+        try {
+            log.warn("⚠️  === DÉBUT RESET DATABASE === ⚠️ ");
+            
+            // Compter ce qui va être supprimé
+            long nbActions = actionDossierRepository.count();
+            long nbDossiers = dossierRepository.count();
+            long nbCredits = creditRepository.count();
+            long nbClients = clientRepository.count();
+            
+            // Compter les agents
+            Role roleAgent = roleRepository.findByNom("AGENT").orElse(null);
+            long nbAgents = 0;
+            if (roleAgent != null) {
+                nbAgents = userRepository.findAll().stream()
+                        .filter(u -> u.getRoles().stream().anyMatch(r -> r.getNom().equals("AGENT")))
+                        .count();
+            }
+            
+            log.info("📊 Avant suppression:");
+            log.info("  - Actions: {}", nbActions);
+            log.info("  - Dossiers: {}", nbDossiers);
+            log.info("  - Crédits: {}", nbCredits);
+            log.info("  - Clients: {}", nbClients);
+            log.info("  - Agents: {}", nbAgents);
+            
+            // 1. Supprimer toutes les actions
+            actionDossierRepository.deleteAll();
+            log.info("✅ Actions supprimées");
+            
+            // 2. Supprimer tous les dossiers
+            dossierRepository.deleteAll();
+            log.info("✅ Dossiers supprimés");
+            
+            // 3. Supprimer tous les crédits
+            creditRepository.deleteAll();
+            log.info("✅ Crédits supprimés");
+            
+            // 4. Supprimer tous les clients
+            clientRepository.deleteAll();
+            log.info("✅ Clients supprimés");
+            
+            // 5. Supprimer tous les agents (mais pas l'admin)
+            if (roleAgent != null) {
+                List<User> agents = userRepository.findAll().stream()
+                        .filter(u -> u.getRoles().stream().anyMatch(r -> r.getNom().equals("AGENT")))
+                        .toList();
+                
+                userRepository.deleteAll(agents);
+                log.info("✅ Agents supprimés: {}", agents.size());
+            }
+            
+            // Vérification après suppression
+            long nbActionsApres = actionDossierRepository.count();
+            long nbDossiersApres = dossierRepository.count();
+            long nbCreditsApres = creditRepository.count();
+            long nbClientsApres = clientRepository.count();
+            long nbUsersApres = userRepository.count();
+            
+            log.info("📊 Après suppression:");
+            log.info("  - Actions: {}", nbActionsApres);
+            log.info("  - Dossiers: {}", nbDossiersApres);
+            log.info("  - Crédits: {}", nbCreditsApres);
+            log.info("  - Clients: {}", nbClientsApres);
+            log.info("  - Users restants: {} (admin(s))", nbUsersApres);
+            log.info("✅ === FIN RESET DATABASE === ✅");
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Base de données réinitialisée avec succès",
+                "suppressed", Map.of(
+                    "actions", nbActions,
+                    "dossiers", nbDossiers,
+                    "credits", nbCredits,
+                    "clients", nbClients,
+                    "agents", nbAgents
+                ),
+                "remaining", Map.of(
+                    "actions", nbActionsApres,
+                    "dossiers", nbDossiersApres,
+                    "credits", nbCreditsApres,
+                    "clients", nbClientsApres,
+                    "users", nbUsersApres
+                )
+            ));
+            
+        } catch (Exception e) {
+            log.error("❌ Erreur lors du reset : {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "message", "Erreur : " + e.getMessage()
+            ));
+        }
+    }
+    
     @PostMapping("/excel")
     public ResponseEntity<ImportRapport> importExcel(@RequestParam("file") MultipartFile file) {
         ImportRapport rapport = new ImportRapport();
@@ -93,6 +208,9 @@ public class ImportController {
                         String dvr = getCellValueByHeader(row, columnMap, "DVR");
                         String reecheance = getCellValueByHeader(row, columnMap, "Reecheance");
                         String immatriculation = getCellValueByHeader(row, columnMap, "Immatriculation");
+                        
+                        // ⭐ NOUVELLE COLONNE : Email de l'agent assigné
+                        String agentEmail = getCellValueByHeader(row, columnMap, "Agent_Email");
 
                         if (cin.isEmpty() || referenceContrat.isEmpty()) {
                             nbRejetees++;
@@ -168,15 +286,60 @@ public class ImportController {
                                     return creditRepository.save(newCredit);
                                 });
 
+                        // ⭐ LOGIQUE D'AFFECTATION AUTOMATIQUE
                         if (!creditExists) {
                             if (!dossierRepository.findByCreditId(credit.getId()).isPresent()) {
                                 Dossier dossier = new Dossier();
                                 dossier.setCredit(credit);
-                                dossier.setStatutActuel(StatutDossier.NOUVEAU);
+                                
+                                // Si un email agent est fourni dans le fichier Excel
+                                if (agentEmail != null && !agentEmail.trim().isEmpty()) {
+                                    try {
+                                        // Chercher l'agent ou le créer automatiquement
+                                        User agent = userRepository.findByEmail(agentEmail.trim())
+                                                .orElseGet(() -> {
+                                                    log.info("⚡ Création automatique de l'agent : {}", agentEmail);
+                                                    return creerAgentAutomatiquement(agentEmail.trim(), ville);
+                                                });
+                                        
+                                        if (agent != null) {
+                                            // Agent trouvé ou créé : affectation automatique
+                                            dossier.setAgentAssigne(agent);
+                                            dossier.setStatutActuel(StatutDossier.EN_COURS);
+                                            log.debug("✓ Dossier {} affecté à {}", referenceContrat, agentEmail);
+                                        } else {
+                                            dossier.setStatutActuel(StatutDossier.NOUVEAU);
+                                            log.warn("⚠ Impossible de créer l'agent {}", agentEmail);
+                                        }
+                                    } catch (Exception e) {
+                                        dossier.setStatutActuel(StatutDossier.NOUVEAU);
+                                        log.error("⚠ Erreur affectation agent {} : {}", agentEmail, e.getMessage());
+                                    }
+                                } else {
+                                    // Pas d'email agent : statut NOUVEAU par défaut
+                                    dossier.setStatutActuel(StatutDossier.NOUVEAU);
+                                }
+                                
                                 dossierRepository.save(dossier);
                                 nbInserees++;
                             }
                         } else {
+                            // Crédit existant : mise à jour de l'affectation si nécessaire
+                            dossierRepository.findByCreditId(credit.getId()).ifPresent(dossier -> {
+                                if (agentEmail != null && !agentEmail.trim().isEmpty()) {
+                                    User agent = userRepository.findByEmail(agentEmail.trim())
+                                            .orElseGet(() -> creerAgentAutomatiquement(agentEmail.trim(), ville));
+                                    
+                                    if (agent != null) {
+                                        dossier.setAgentAssigne(agent);
+                                        if (dossier.getStatutActuel() == StatutDossier.NOUVEAU) {
+                                            dossier.setStatutActuel(StatutDossier.EN_COURS);
+                                        }
+                                        dossierRepository.save(dossier);
+                                        log.debug("✓ Dossier existant {} réaffecté à {}", referenceContrat, agentEmail);
+                                    }
+                                }
+                            });
                             nbMisesAJour++;
                         }
 
@@ -200,6 +363,53 @@ public class ImportController {
 
             return ResponseEntity.ok(rapport);
         }
+
+    /**
+     * ⭐ Méthode pour créer automatiquement un agent s'il n'existe pas
+     * 
+     * @param email Email de l'agent (ex: agent1.fes@eqdom.ma)
+     * @param ville Ville du dossier (ex: FES)
+     * @return L'utilisateur créé ou null en cas d'erreur
+     */
+    private User creerAgentAutomatiquement(String email, String ville) {
+        try {
+            // Vérifier si le rôle AGENT existe
+            Role roleAgent = roleRepository.findByNom("AGENT")
+                    .orElseThrow(() -> new BusinessException("Rôle AGENT introuvable"));
+            
+            // Extraire des informations depuis l'email
+            // Ex: agent1.fes@eqdom.ma -> nom=Agent1, prenom=Fes
+            String[] parts = email.split("@")[0].split("\\.");
+            String nom = parts.length > 0 ? capitalize(parts[0]) : "Agent";
+            String prenom = parts.length > 1 ? capitalize(parts[1]) : ville;
+            
+            // Créer le nouvel utilisateur
+            User newAgent = new User();
+            newAgent.setEmail(email);
+            newAgent.setNom(nom);
+            newAgent.setPrenom(prenom);
+            // Mot de passe par défaut : Eqdom2024!
+            newAgent.setPassword(passwordEncoder.encode("Eqdom2024!"));
+            newAgent.setActif(true);
+            newAgent.setRoles(Set.of(roleAgent));
+            
+            User savedAgent = userRepository.save(newAgent);
+            log.info("✅ Agent créé avec succès : {} (mot de passe: Eqdom2024!)", email);
+            
+            return savedAgent;
+        } catch (Exception e) {
+            log.error("❌ Erreur lors de la création de l'agent {} : {}", email, e.getMessage(), e);
+            return null;
+        }
+    }
+    
+    /**
+     * Capitaliser la première lettre d'une chaîne
+     */
+    private String capitalize(String str) {
+        if (str == null || str.isEmpty()) return str;
+        return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
+    }
 
     private String getCellValue(Row row, int colIndex) {
         Cell cell = row.getCell(colIndex);

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8081/api/users";
+const API_URL = `${import.meta.env.VITE_API_URL}/api/users`;
 
 export interface UserDTO {
     id: number;
@@ -21,8 +21,20 @@ export async function createUser(payload: any) {
     return axios.post(API_URL, payload);
 }
 
-export async function updateUser(id: number, payload: any) {
+/**
+ * Met à jour le profil utilisateur (nom, prénom, email).
+ * N'inclut PAS le champ role pour éviter le mass assignment.
+ */
+export async function updateUser(id: number, payload: { nom: string; prenom: string; email: string }) {
     return axios.put(`${API_URL}/${id}`, payload);
+}
+
+/**
+ * Met à jour le rôle d'un utilisateur.
+ * Réservé aux administrateurs.
+ */
+export async function updateUserRole(id: number, role: string) {
+    return axios.put(`${API_URL}/${id}/role`, { role });
 }
 
 export async function toggleActivation(id: number) {

@@ -39,12 +39,9 @@ export default function Login() {
             <div className="login-header">
                 <div className="header-left">
                     <img src={eqdomLogo} alt="eqdom" className="eqdom-logo-main" />
-                    <span className="login-header-title">Centre_Aouad</span>
-                </div>
-                <div className="login-header-logo">
-                    <div className="logo-text">
-                        <strong>eqdom</strong>
-                        <small>L'essentiel, c'est vous.</small>
+                    <div className="brand-text">
+                        <span className="brand-name">eqdom</span>
+                        <span className="brand-tagline">L'essentiel, c'est vous.</span>
                     </div>
                 </div>
             </div>

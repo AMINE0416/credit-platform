@@ -7,4 +7,5 @@ import java.util.List;
 public interface ActionDossierRepository extends JpaRepository<ActionDossier, Long> {
     List<ActionDossier> findByDossierIdOrderByDateActionDesc(Long dossierId);
     long countByDossierId(Long dossierId);
+    long deleteByDossierId(Long dossierId);
 }

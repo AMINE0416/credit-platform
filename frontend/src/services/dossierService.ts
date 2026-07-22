@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8081/api/dossiers";
+const API_URL = `${import.meta.env.VITE_API_URL}/api/dossiers`;
 
 export interface DossierListItem {
     id: number;
@@ -124,4 +124,8 @@ export async function exportExcel(): Promise<void> {
         console.error('Erreur lors de l\'export Excel:', error);
         throw error;
     }
+}
+
+export async function supprimerDossier(id: number): Promise<void> {
+    await axios.delete(`${API_URL}/${id}`);
 }

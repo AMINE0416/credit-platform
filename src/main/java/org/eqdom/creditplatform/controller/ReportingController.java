@@ -5,6 +5,7 @@ import org.eqdom.creditplatform.repository.DossierRepository;
 import org.eqdom.creditplatform.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedHashMap;
@@ -12,6 +13,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reporting")
+@PreAuthorize("hasAuthority('ADMIN')")
 public class ReportingController {
 
     @Autowired private DossierRepository dossierRepository;

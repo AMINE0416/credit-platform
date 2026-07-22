@@ -36,6 +36,15 @@ export default function AdminHome() {
 
     if (!kpis) return <div>Chargement...</div>;
 
+    // Calcul des pourcentages
+    const tauxAssignation = kpis.totalDossiers > 0 
+        ? ((kpis.totalDossiers - kpis.dossiersNonAssignes) / kpis.totalDossiers * 100).toFixed(1)
+        : "0";
+    
+    const pourcentageNonAssignes = kpis.totalDossiers > 0
+        ? (kpis.dossiersNonAssignes / kpis.totalDossiers * 100).toFixed(1)
+        : "0";
+
     return (
         <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
@@ -57,25 +66,46 @@ export default function AdminHome() {
                 <div className="kpi-card">
                     <span className="kpi-value">{kpis.dossiersNonAssignes}</span>
                     <span className="kpi-label">Non assignés</span>
+                    <span className="kpi-percentage">{pourcentageNonAssignes}%</span>
                 </div>
                 <div className="kpi-card">
                     <span className="kpi-value">{kpis.totalAgents}</span>
                     <span className="kpi-label">Agents actifs</span>
                 </div>
-                <div className="kpi-card">
-                    <span className="kpi-value">{kpis.totalAdmins}</span>
-                    <span className="kpi-label">Administrateurs</span>
+                <div className="kpi-card kpi-card-highlight">
+                    <span className="kpi-value">{tauxAssignation}%</span>
+                    <span className="kpi-label">Taux d'assignation</span>
+                    <div className="progress-bar">
+                        <div className="progress-fill" style={{ width: `${tauxAssignation}%` }}></div>
+                    </div>
                 </div>
             </div>
 
             <h3 className="section-title">Répartition par statut</h3>
             <div className="statut-grid">
-                {Object.entries(kpis.parStatut).map(([statut, count]) => (
-                    <div key={statut} className="statut-card" style={{ borderTopColor: statutColors[statut] }}>
-                        <span className="statut-count">{count}</span>
-                        <span className="statut-label">{statutLabels[statut] || statut}</span>
-                    </div>
-                ))}
+                {Object.entries(kpis.parStatut).map(([statut, count]) => {
+                    const percentage = kpis.totalDossiers > 0 
+                        ? (count / kpis.totalDossiers * 100).toFixed(1) 
+                        : "0";
+                    return (
+                        <div key={statut} className="statut-card" style={{ borderTopColor: statutColors[statut] }}>
+                            <div className="statut-header">
+                                <span className="statut-count">{count}</span>
+                                <span className="statut-percentage">{percentage}%</span>
+                            </div>
+                            <span className="statut-label">{statutLabels[statut] || statut}</span>
+                            <div className="statut-progress">
+                                <div 
+                                    className="statut-progress-fill" 
+                                    style={{ 
+                                        width: `${percentage}%`,
+                                        backgroundColor: statutColors[statut]
+                                    }}
+                                ></div>
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

@@ -17,11 +17,16 @@ const statutColors: Record<string, string> = {
 
 export default function AgentDashboard() {
   const [dossiers, setDossiers] = useState<DossierListItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const nom = localStorage.getItem("nom") || "Agent";
 
   useEffect(() => {
-    getMesDossiers().then(setDossiers).catch(console.error);
+    setLoading(true);
+    getMesDossiers()
+      .then(setDossiers)
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
   const handleLogout = () => {
@@ -34,7 +39,10 @@ export default function AgentDashboard() {
         <header className="agent-header">
           <div className="header-left">
             <img src={eqdomLogo} alt="eqdom" className="eqdom-logo" />
-            <span className="center-name">Centre_Aouad</span>
+            <div className="brand-text">
+              <span className="brand-name">eqdom</span>
+              <span className="brand-tagline">L'essentiel, c'est vous.</span>
+            </div>
           </div>
           <div className="agent-header-right">
             <span className="agent-username">👤 {nom}</span>
@@ -42,49 +50,55 @@ export default function AgentDashboard() {
               🚪 Déconnexion
             </button>
           </div>
-          <div className="agent-header-logo">
-            <span className="logo-circle">C</span>
-            <div className="logo-text"><strong>eqdom</strong><small>L'essentiel, c'est vous.</small></div>
-          </div>
         </header>
 
         <div className="agent-content">
           <h2>Mes dossiers assignés</h2>
-          <table className="dossier-table">
-            <thead>
-            <tr>
-              <th>CIN</th>
-              <th>Nom complet</th>
-              <th>Référence contrat</th>
-              <th>Ville</th>
-              <th>Statut</th>
-              <th></th>
-            </tr>
-            </thead>
-            <tbody>
-            {dossiers.map((d) => (
-                <tr key={d.id}>
-                  <td>{d.cin}</td>
-                  <td>{d.nomComplet}</td>
-                  <td>{d.referenceContrat}</td>
-                  <td>{d.ville}</td>
-                  <td>
-                  <span className="badge" style={{ background: statutColors[d.statut] }}>
-                    {d.statut}
-                  </span>
-                  </td>
-                  <td>
-                    <button onClick={() => navigate(`/agent/dossiers/${d.id}`)}>
-                      Ouvrir
-                    </button>
-                  </td>
+          
+          {loading ? (
+            <div className="loading-container">
+              <div className="spinner"></div>
+              <p>Chargement des dossiers...</p>
+            </div>
+          ) : (
+            <div className="table-container">
+              <table className="dossier-table">
+                <thead>
+                <tr>
+                  <th>CIN</th>
+                  <th>Nom complet</th>
+                  <th>Référence contrat</th>
+                  <th>Ville</th>
+                  <th>Statut</th>
+                  <th></th>
                 </tr>
-            ))}
-            {dossiers.length === 0 && (
-                <tr><td colSpan={6} className="empty">Aucun dossier assigné pour le moment</td></tr>
-            )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                {dossiers.map((d) => (
+                    <tr key={d.id}>
+                      <td>{d.cin}</td>
+                      <td>{d.nomComplet}</td>
+                      <td>{d.referenceContrat}</td>
+                      <td>{d.ville}</td>
+                      <td>
+                      <span className="badge" style={{ background: statutColors[d.statut] }}>
+                        {d.statut}
+                      </span>
+                      </td>
+                      <td>
+                        <button onClick={() => navigate(`/agent/dossiers/${d.id}`)}>
+                          Ouvrir
+                        </button>
+                      </td>
+                    </tr>
+                ))}
+                {dossiers.length === 0 && (
+                    <tr><td colSpan={6} className="empty">Aucun dossier assigné pour le moment</td></tr>
+                )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
   );

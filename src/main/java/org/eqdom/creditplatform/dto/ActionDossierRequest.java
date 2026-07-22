@@ -2,6 +2,9 @@ package org.eqdom.creditplatform.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.DecimalMin;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import org.eqdom.creditplatform.model.NatureAction;
@@ -10,22 +13,29 @@ import org.eqdom.creditplatform.model.CodeResultat;
 import org.eqdom.creditplatform.model.Recidive;
 
 public class ActionDossierRequest {
+    @NotBlank(message = "La nature de l'action est obligatoire")
     @JsonProperty("natureAction")
     private String natureActionStr;
     
     @JsonProperty("motifImpaye")
     private String motifImpayeStr;
     
+    @NotBlank(message = "Le compte rendu est obligatoire")
     private String compteRendu;
     
+    @NotBlank(message = "Le code résultat est obligatoire")
     @JsonProperty("codeResultat")
     private String codeResultatStr;
     
     @JsonProperty("recidive")
     private String recidiveStr;
     
+    @Positive(message = "Le nombre d'actions doit être positif")
     private Integer nbreActionClient;
+    
+    @DecimalMin(value = "0.0", inclusive = false, message = "Le montant de la promesse doit être positif")
     private BigDecimal montantPromesse;
+    
     private LocalDate datePromesse;
     private String nouveauTelephone;
     private String nouveauStatut;

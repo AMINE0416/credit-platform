@@ -52,7 +52,8 @@ public class ExcelExportService {
     }
 
     /**
-     * Crée la feuille "État actuel" avec snapshot de tous les dossiers
+     * Crée la feuille "État actuel" avec TOUTES les colonnes d'origine + données agent
+     * Format Excel enrichi pour export complet des dossiers
      */
     private void creerFeuilleEtatActuel(Workbook workbook, String dateExtraction) {
         Sheet sheet = workbook.createSheet("État actuel");
@@ -61,12 +62,25 @@ public class ExcelExportService {
         CellStyle headerStyle = createHeaderStyle(workbook);
         CellStyle dateStyle = createDateStyle(workbook);
 
-        // En-têtes
+        // En-têtes : COLONNES ORIGINALES D'IMPORT + DONNÉES AGENT
         Row headerRow = sheet.createRow(0);
         String[] headers = {
-            "Date extraction", "Référence contrat", "CIN", "Nom client", "Prénom client",
-            "Téléphone", "Statut actuel", "Agent assigné", "Date création",
-            "Nb impayés", "Montant impayé", "Mensualité", "Encours"
+            // === COLONNES CLIENT (ORIGINALES) ===
+            "num_cin1", "nom", "prenom", "cli_tel", "TEL2", "cli_adr", 
+            "Lib_Ville", "cod_age", "lib_age", "Adresse_Cadrage",
+            
+            // === COLONNES CRÉDIT (ORIGINALES) ===
+            "ANC_REFDO", "From_Prov", "GEST_CIN", "CSP_PDT", "Segment",
+            "nbr_imp", "Mensualite", "encours", "Mnt_Imp", "prv_cum",
+            "stage", "DVR", "Reecheance", "Immatriculation",
+            
+            // === COLONNES GESTION DOSSIER ===
+            "Agent_Email", "Statut_Actuel", "Date_Creation_Dossier",
+            
+            // === DONNÉES SAISIES PAR L'AGENT (dernière action) ===
+            "Derniere_Action_Date", "Nature_Action", "Code_Resultat",
+            "Motif_Impaye", "Recidive", "Montant_Promesse", "Date_Promesse",
+            "Compte_Rendu"
         };
 
         for (int i = 0; i < headers.length; i++) {
@@ -85,40 +99,106 @@ public class ExcelExportService {
             Client client = credit.getClient();
 
             int colNum = 0;
-            row.createCell(colNum++).setCellValue(dateExtraction);
-            row.createCell(colNum++).setCellValue(credit.getReferenceContrat());
-            row.createCell(colNum++).setCellValue(client.getCin());
-            row.createCell(colNum++).setCellValue(client.getNom());
-            row.createCell(colNum++).setCellValue(client.getPrenom());
-            row.createCell(colNum++).setCellValue(client.getTelephone());
-            row.createCell(colNum++).setCellValue(dossier.getStatutActuel().name());
-            row.createCell(colNum++).setCellValue(
-                dossier.getAgentAssigne() != null 
-                    ? dossier.getAgentAssigne().getNom() + " " + dossier.getAgentAssigne().getPrenom()
-                    : ""
-            );
             
-            Cell dateCell = row.createCell(colNum++);
-            if (dossier.getDateCreation() != null) {
-                dateCell.setCellValue(dossier.getDateCreation().format(DATE_FORMAT));
-            }
+            // === COLONNES CLIENT (ORIGINALES) ===
+            row.createCell(colNum++).setCellValue(nvl(client.getCin()));
+            row.createCell(colNum++).setCellValue(nvl(client.getNom()));
+            row.createCell(colNum++).setCellValue(nvl(client.getPrenom()));
+            row.createCell(colNum++).setCellValue(nvl(client.getTelephone()));
+            row.createCell(colNum++).setCellValue(nvl(client.getTelephone2()));
+            row.createCell(colNum++).setCellValue(nvl(client.getAdresse()));
+            row.createCell(colNum++).setCellValue(nvl(client.getVille()));
+            row.createCell(colNum++).setCellValue(nvl(client.getCodeAgence()));
+            row.createCell(colNum++).setCellValue(nvl(client.getLibAgence()));
+            row.createCell(colNum++).setCellValue(nvl(client.getAdresseCadrage()));
             
+            // === COLONNES CRÉDIT (ORIGINALES) ===
+            row.createCell(colNum++).setCellValue(nvl(credit.getReferenceContrat()));
+            row.createCell(colNum++).setCellValue(nvl(credit.getFromProv()));
+            row.createCell(colNum++).setCellValue(nvl(credit.getGestCin()));
+            row.createCell(colNum++).setCellValue(nvl(credit.getTypeCredit()));
+            row.createCell(colNum++).setCellValue(nvl(credit.getSegment()));
             row.createCell(colNum++).setCellValue(credit.getNbrImpaye() != null ? credit.getNbrImpaye() : 0);
-            row.createCell(colNum++).setCellValue(
-                credit.getImpayeMontant() != null ? credit.getImpayeMontant().doubleValue() : 0
-            );
             row.createCell(colNum++).setCellValue(
                 credit.getMensualite() != null ? credit.getMensualite().doubleValue() : 0
             );
             row.createCell(colNum++).setCellValue(
                 credit.getEncours() != null ? credit.getEncours().doubleValue() : 0
             );
+            row.createCell(colNum++).setCellValue(
+                credit.getImpayeMontant() != null ? credit.getImpayeMontant().doubleValue() : 0
+            );
+            row.createCell(colNum++).setCellValue(
+                credit.getPrvCum() != null ? credit.getPrvCum().doubleValue() : 0
+            );
+            row.createCell(colNum++).setCellValue(nvl(credit.getStage()));
+            row.createCell(colNum++).setCellValue(nvl(credit.getDvr()));
+            row.createCell(colNum++).setCellValue(nvl(credit.getReecheance()));
+            row.createCell(colNum++).setCellValue(nvl(credit.getImmatriculation()));
+            
+            // === COLONNES GESTION DOSSIER ===
+            row.createCell(colNum++).setCellValue(
+                dossier.getAgentAssigne() != null ? nvl(dossier.getAgentAssigne().getEmail()) : ""
+            );
+            row.createCell(colNum++).setCellValue(dossier.getStatutActuel().name());
+            row.createCell(colNum++).setCellValue(
+                dossier.getDateCreation() != null ? dossier.getDateCreation().format(DATE_FORMAT) : ""
+            );
+            
+            // === DONNÉES SAISIES PAR L'AGENT (dernière action) ===
+            // Récupérer la dernière action du dossier
+            ActionDossier derniereAction = actionDossierRepository
+                    .findByDossierIdOrderByDateActionDesc(dossier.getId())
+                    .stream()
+                    .findFirst()
+                    .orElse(null);
+            
+            if (derniereAction != null) {
+                row.createCell(colNum++).setCellValue(
+                    derniereAction.getDateAction().format(DATETIME_FORMAT)
+                );
+                row.createCell(colNum++).setCellValue(
+                    derniereAction.getNatureAction() != null ? derniereAction.getNatureAction().name() : ""
+                );
+                row.createCell(colNum++).setCellValue(
+                    derniereAction.getCodeResultat() != null ? derniereAction.getCodeResultat().name() : ""
+                );
+                row.createCell(colNum++).setCellValue(
+                    derniereAction.getMotifImpaye() != null ? derniereAction.getMotifImpaye().name() : ""
+                );
+                row.createCell(colNum++).setCellValue(
+                    derniereAction.getRecidive() != null ? derniereAction.getRecidive().name() : ""
+                );
+                row.createCell(colNum++).setCellValue(
+                    derniereAction.getMontantPromesse() != null 
+                        ? String.format("%.2f", derniereAction.getMontantPromesse().doubleValue()) 
+                        : ""
+                );
+                row.createCell(colNum++).setCellValue(
+                    derniereAction.getDatePromesse() != null 
+                        ? derniereAction.getDatePromesse().format(DATE_FORMAT) 
+                        : ""
+                );
+                row.createCell(colNum++).setCellValue(nvl(derniereAction.getCompteRendu()));
+            } else {
+                // Pas encore d'action : colonnes vides
+                for (int i = 0; i < 8; i++) {
+                    row.createCell(colNum++).setCellValue("");
+                }
+            }
         }
 
         // Auto-size colonnes
         for (int i = 0; i < headers.length; i++) {
             sheet.autoSizeColumn(i);
         }
+    }
+    
+    /**
+     * Utilitaire pour gérer les valeurs nulles
+     */
+    private String nvl(String value) {
+        return value != null ? value : "";
     }
 
     /**

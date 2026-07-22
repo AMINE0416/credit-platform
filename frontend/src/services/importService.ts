@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8081/api/imports";
+const API_URL = `${import.meta.env.VITE_API_URL}/api/imports`;
 
 export interface ImportRapport {
     jobId: number;
@@ -18,5 +18,10 @@ export async function importExcel(file: File): Promise<ImportRapport> {
     const res = await axios.post(`${API_URL}/excel`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
     });
+    return res.data;
+}
+
+export async function resetDatabase(): Promise<any> {
+    const res = await axios.delete(`${API_URL}/reset-database`);
     return res.data;
 }

@@ -107,8 +107,8 @@ public class DataInitializer implements CommandLineRunner {
         // 2. Création du compte ADMIN de test (si n'existe pas)
         if (userRepository.findByEmail("admin@eqdom.ma").isEmpty()) {
             User admin = new User();
-            admin.setNom("Bennani");
-            admin.setPrenom("Yassine");
+            admin.setNom("Bourmani");
+            admin.setPrenom("Amine");
             admin.setEmail("admin@eqdom.ma");
             admin.setPassword(passwordEncoder.encode("Admin@123"));
             admin.setActif(true);
