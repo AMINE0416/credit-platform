@@ -6,31 +6,51 @@ Application web complète pour la gestion de dossiers de crédit avec authentifi
 
 - **Backend** : Spring Boot 4.1.0 + PostgreSQL + JWT
 - **Frontend** : React 19 + Vite + TypeScript + React Router
-- **Déploiement** : Render (Backend + PostgreSQL) + Vercel (Frontend)
+- **Déploiement** : Railway (Backend + PostgreSQL) ou Render + Vercel (Frontend)
 
-## 🚀 Déploiement en Production
+## 🚀 Déploiement en Production (GRATUIT)
 
 **Tous les fichiers de configuration sont prêts !**
 
-👉 **Pour déployer maintenant** : Ouvre **[NEXT_STEPS.md](./NEXT_STEPS.md)**
+### 🚂 Option 1 : Railway (⭐ RECOMMANDÉ - Gratuit sans CB)
+
+👉 **[COMMENCER_ICI.md](./COMMENCER_ICI.md)** - Guide simple de démarrage  
+👉 **[RAILWAY_QUICK_START.md](./RAILWAY_QUICK_START.md)** - Déploiement en 10 min
+
+**Pourquoi Railway ?**
+- ✅ Totalement gratuit (500h/mois)
+- ✅ Pas de CB requise
+- ✅ PostgreSQL inclus
+- ✅ Simple et rapide
+
+### 🎨 Option 2 : Render (CB maintenant requise)
+
+👉 **[DEPLOYER_MAINTENANT.md](./DEPLOYER_MAINTENANT.md)** - Guide Render
+
+### ⚖️ Pas sûr ?
+
+👉 **[COMPARAISON_PLATEFORMES.md](./COMPARAISON_PLATEFORMES.md)** - Comparer les options
 
 ### Documentation de Déploiement
 
 | Document | Description |
 |----------|-------------|
-| **[NEXT_STEPS.md](./NEXT_STEPS.md)** ⭐ | **COMMENCE ICI** - Étapes à faire maintenant |
-| [README_DEPLOYMENT.md](./README_DEPLOYMENT.md) | Vue d'ensemble du déploiement |
-| [DEPLOY_QUICK_START.md](./DEPLOY_QUICK_START.md) | Guide rapide en 5 étapes (15 min) |
-| [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) | Guide complet et détaillé |
-| [DEPLOYMENT_SUMMARY.md](./DEPLOYMENT_SUMMARY.md) | Résumé technique |
+| **[COMMENCER_ICI.md](./COMMENCER_ICI.md)** ⭐ | **COMMENCE ICI** - Guide de démarrage simple |
+| **[RAILWAY_QUICK_START.md](./RAILWAY_QUICK_START.md)** ⭐ | Railway - Déploiement gratuit en 10 min |
+| **[DEPLOYMENT_RAILWAY.md](./DEPLOYMENT_RAILWAY.md)** | Railway - Guide complet |
+| **[COMPARAISON_PLATEFORMES.md](./COMPARAISON_PLATEFORMES.md)** | Comparer Railway vs Render vs autres |
+| [DEPLOYER_MAINTENANT.md](./DEPLOYER_MAINTENANT.md) | Render - Déploiement rapide |
+| [NEXT_STEPS.md](./NEXT_STEPS.md) | Render - Étapes détaillées |
+| [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) | Guide de référence complet |
+| [INDEX_DOCUMENTATION.md](./INDEX_DOCUMENTATION.md) | Navigation dans toute la doc |
 
 ### Fichiers de Configuration Créés
 
-#### Backend (Render)
+#### Backend (Railway / Render)
 - ✅ `Dockerfile` - Image Docker multi-stage
 - ✅ `.dockerignore`
-- ✅ `render.yaml`
-- ✅ `src/main/resources/application-prod.properties`
+- ✅ `render.yaml` - Configuration Render
+- ✅ `src/main/resources/application-prod.properties` - Supporte Railway et Render
 
 #### Frontend (Vercel)
 - ✅ `frontend/vercel.json`
@@ -212,4 +232,4 @@ Pour toute question ou problème :
 
 ---
 
-**Prêt pour le déploiement ?** 👉 Commence par [NEXT_STEPS.md](./NEXT_STEPS.md)
+**Prêt pour le déploiement ?** 👉 Commence par [COMMENCER_ICI.md](./COMMENCER_ICI.md) ou [RAILWAY_QUICK_START.md](./RAILWAY_QUICK_START.md)

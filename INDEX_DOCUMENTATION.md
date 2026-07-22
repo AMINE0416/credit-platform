@@ -6,7 +6,14 @@
 
 ## 🎯 Par Où Commencer ?
 
-### Tu veux déployer MAINTENANT ? ⚡
+### 🚂 Tu veux déployer sur Railway (RECOMMANDÉ - Gratuit sans CB) ? ⚡
+```
+👉 RAILWAY_QUICK_START.md (guide rapide 10 min)
+👉 DEPLOYMENT_RAILWAY.md (guide complet)
+👉 COMPARAISON_PLATEFORMES.md (choisir la plateforme)
+```
+
+### 🎨 Tu veux déployer sur Render (CB requise maintenant) ? ⚡
 ```
 👉 TOUT_EST_PRET.md (vue d'ensemble)
 👉 DEPLOYER_MAINTENANT.md (action immédiate)
@@ -27,11 +34,49 @@
 
 ---
 
-## 📑 Tous les Guides (19 Fichiers)
+## 📑 Tous les Guides (22 Fichiers)
 
-### 🚀 Guides de Déploiement
+### 🚀 Guides de Déploiement Railway (⭐ RECOMMANDÉ)
 
-#### 1. TOUT_EST_PRET.md ⭐⭐⭐
+#### 1. RAILWAY_QUICK_START.md ⭐⭐⭐ 🆕
+**Résumé** : Déploiement ultra-rapide sur Railway (10 min)  
+**Quand** : Pour déployer GRATUITEMENT sans CB  
+**Durée lecture** : 5 min  
+**Contenu** :
+- 6 étapes ultra-simples
+- PostgreSQL inclus gratuitement
+- 500h gratuites/mois
+- Pas de cold start gênant
+- Idéal pour MVP/démo
+
+#### 2. DEPLOYMENT_RAILWAY.md ⭐⭐⭐ 🆕
+**Résumé** : Guide complet Railway avec troubleshooting  
+**Quand** : Pour tout comprendre sur Railway  
+**Durée lecture** : 15 min  
+**Contenu** :
+- Guide détaillé étape par étape
+- Configuration variables d'environnement
+- Lier PostgreSQL au backend
+- Troubleshooting complet
+- Monitoring et maintenance
+- Coûts et limites détaillés
+
+#### 3. COMPARAISON_PLATEFORMES.md ⭐⭐⭐ 🆕
+**Résumé** : Comparaison Railway vs Render vs Fly.io vs autres  
+**Quand** : Pour choisir la meilleure plateforme  
+**Durée lecture** : 10 min  
+**Contenu** :
+- Tableau comparatif détaillé
+- Avantages/Inconvénients de chaque plateforme
+- Coûts sur 12 mois
+- Recommandation personnalisée
+- Quand utiliser quelle plateforme
+
+---
+
+### 🎨 Guides de Déploiement Render
+
+#### 4. TOUT_EST_PRET.md ⭐⭐⭐
 **Résumé** : Vue d'ensemble complète - Tout ce qui est prêt  
 **Quand** : Avant de commencer  
 **Durée lecture** : 5 min  
@@ -42,7 +87,7 @@
 - Coûts détaillés
 - Checklist rapide
 
-#### 2. DEPLOYER_MAINTENANT.md ⭐⭐⭐
+#### 5. DEPLOYER_MAINTENANT.md ⭐⭐⭐
 **Résumé** : Guide ultra-rapide - 6 étapes pour déployer  
 **Quand** : Pour déployer en 20 min  
 **Durée lecture** : 10 min  
@@ -52,7 +97,7 @@
 - PostgreSQL simplifié
 - Troubleshooting intégré
 
-#### 3. NEXT_STEPS.md ⭐⭐⭐
+#### 6. NEXT_STEPS.md ⭐⭐⭐
 **Résumé** : Instructions détaillées avec explications  
 **Quand** : Pour tout comprendre  
 **Durée lecture** : 15 min  
@@ -62,7 +107,7 @@
 - Captures d'écran mentales
 - Vérifications à chaque étape
 
-#### 4. START_HERE.md ⭐⭐
+#### 7. START_HERE.md ⭐⭐
 **Résumé** : Point de départ - Orientation  
 **Quand** : Premier contact avec la doc  
 **Durée lecture** : 3 min  
@@ -109,7 +154,7 @@
 
 ### 📖 Guides Complets
 
-#### 8. DEPLOYMENT_GUIDE.md ⭐
+#### 8. DEPLOYMENT_CHECKLIST.md ⭐⭐
 **Résumé** : Guide de référence ultra-détaillé  
 **Quand** : Pour référence approfondie  
 **Durée lecture** : 30 min  
