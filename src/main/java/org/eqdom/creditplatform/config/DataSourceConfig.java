@@ -1,5 +1,7 @@
 package org.eqdom.creditplatform.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,13 +18,19 @@ import java.net.URI;
 @Configuration
 public class DataSourceConfig {
 
+    private static final Logger logger = LoggerFactory.getLogger(DataSourceConfig.class);
+
     @Bean
     @Primary
     public DataSource dataSource() {
         String databaseUrl = System.getenv("DATABASE_URL");
 
+        logger.info("=== DataSource Configuration ===");
+        logger.info("DATABASE_URL exists: {}", databaseUrl != null);
+
         // Fallback pour le dev local (pas de DATABASE_URL en local)
         if (databaseUrl == null || databaseUrl.isBlank()) {
+            logger.warn("DATABASE_URL not found, using localhost fallback for development");
             return DataSourceBuilder.create()
                     .url("jdbc:postgresql://localhost:5432/credit_platform")
                     .username(System.getenv().getOrDefault("DB_USERNAME", "postgres"))
@@ -32,12 +40,20 @@ public class DataSourceConfig {
         }
 
         try {
+            logger.info("Parsing DATABASE_URL...");
             URI dbUri = new URI(databaseUrl);
             String[] userInfo = dbUri.getUserInfo().split(":", 2);
             String username = userInfo[0];
             String password = userInfo.length > 1 ? userInfo[1] : "";
 
             String jdbcUrl = "jdbc:postgresql://" + dbUri.getHost() + ":" + dbUri.getPort() + dbUri.getPath();
+
+            logger.info("Database connection configured:");
+            logger.info("  - Host: {}", dbUri.getHost());
+            logger.info("  - Port: {}", dbUri.getPort());
+            logger.info("  - Database: {}", dbUri.getPath());
+            logger.info("  - Username: {}", username);
+            logger.info("  - JDBC URL: {}", jdbcUrl);
 
             return DataSourceBuilder.create()
                     .url(jdbcUrl)
@@ -46,6 +62,7 @@ public class DataSourceConfig {
                     .driverClassName("org.postgresql.Driver")
                     .build();
         } catch (Exception e) {
+            logger.error("Failed to parse DATABASE_URL: {}", databaseUrl, e);
             throw new IllegalStateException("Impossible de parser DATABASE_URL : " + databaseUrl, e);
         }
     }
