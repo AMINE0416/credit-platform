@@ -1,12 +1,41 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vite.dev/config/
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  build: {
+    // Minification avec esbuild (plus rapide et inclus par défaut)
+    minify: 'esbuild',
+    // Code splitting optimisé pour de meilleures performances
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            // Séparer React et React Router
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'vendor-react';
+            }
+            // Séparer les icônes
+            if (id.includes('lucide-react')) {
+              return 'vendor-icons';
+            }
+            // Séparer axios
+            if (id.includes('axios')) {
+              return 'vendor-utils';
+            }
+          }
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+    reportCompressedSize: true,
+    sourcemap: false,
+  },
   server: {
-    host: '0.0.0.0', // Permet l'accès depuis d'autres machines du réseau local
     port: 5173,
-    strictPort: true,
-  }
-})
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom', 'axios', 'lucide-react'],
+  },
+});

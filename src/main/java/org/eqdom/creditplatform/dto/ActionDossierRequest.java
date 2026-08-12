@@ -38,6 +38,7 @@ public class ActionDossierRequest {
     
     private LocalDate datePromesse;
     private String nouveauTelephone;
+    private String nouvelleAdresseCadrage;
     private String nouveauStatut;
 
     // Getters pour les enums (utilisés par le contrôleur) - Ignorés par Jackson
@@ -94,6 +95,9 @@ public class ActionDossierRequest {
     
     public String getNouveauTelephone() { return nouveauTelephone; }
     public void setNouveauTelephone(String nouveauTelephone) { this.nouveauTelephone = nouveauTelephone; }
+    
+    public String getNouvelleAdresseCadrage() { return nouvelleAdresseCadrage; }
+    public void setNouvelleAdresseCadrage(String nouvelleAdresseCadrage) { this.nouvelleAdresseCadrage = nouvelleAdresseCadrage; }
     
     public String getNouveauStatut() { return nouveauStatut; }
     public void setNouveauStatut(String nouveauStatut) { this.nouveauStatut = nouveauStatut; }

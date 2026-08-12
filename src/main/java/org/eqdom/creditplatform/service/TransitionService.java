@@ -15,13 +15,20 @@ import java.util.stream.Collectors;
 @Service
 public class TransitionService {
 
-    // Map des transitions autorisées (même que dans DossierController)
+    // Map des transitions autorisées (logique simplifiée)
     private static final Map<StatutDossier, Set<StatutDossier>> TRANSITIONS_AUTORISEES = Map.of(
-            StatutDossier.NOUVEAU, Set.of(StatutDossier.EN_COURS),
+            // Statuts de travail actifs
             StatutDossier.EN_COURS, Set.of(StatutDossier.PROMESSE, StatutDossier.INJOIGNABLE, StatutDossier.REGULARISE),
-            StatutDossier.INJOIGNABLE, Set.of(StatutDossier.EN_COURS, StatutDossier.INJOIGNABLE),  // Ajout INJOIGNABLE → INJOIGNABLE pour récidive
             StatutDossier.PROMESSE, Set.of(StatutDossier.REGULARISE, StatutDossier.EN_COURS),
+            StatutDossier.INJOIGNABLE, Set.of(StatutDossier.EN_COURS),
             StatutDossier.REGULARISE, Set.of(StatutDossier.CLOTURE),
+            
+            // Statuts de suivi (créés lors de l'archivage, peuvent retourner aux statuts actifs)
+            StatutDossier.ALERTE, Set.of(StatutDossier.EN_COURS, StatutDossier.PROMESSE, StatutDossier.INJOIGNABLE, StatutDossier.REGULARISE),
+            StatutDossier.SUIVI_PROMESSE, Set.of(StatutDossier.REGULARISE, StatutDossier.EN_COURS, StatutDossier.PROMESSE),
+            StatutDossier.SUIVI_INJOIGNABLE, Set.of(StatutDossier.EN_COURS, StatutDossier.PROMESSE, StatutDossier.INJOIGNABLE, StatutDossier.REGULARISE),
+            
+            // Statut final (aucune transition)
             StatutDossier.CLOTURE, Set.of()
     );
 
@@ -59,23 +66,14 @@ public class TransitionService {
 
     /**
      * Détermine quels champs sont obligatoires/visibles selon la transition
-     * Basé sur la matrice de la section 3 du document
      */
     private TransitionInfo.ChampsRequis determinerChampsRequis(StatutDossier depart, StatutDossier arrivee) {
         TransitionInfo.ChampsRequis champs = new TransitionInfo.ChampsRequis();
 
-        // Par défaut : compte rendu recommandé (obligatoire pour la plupart des cas)
+        // Par défaut : compte rendu obligatoire
         champs.setCompteRenduObligatoire(true);
 
-        // Matrice complète selon le document
         switch (depart) {
-            case NOUVEAU:
-                if (arrivee == StatutDossier.EN_COURS) {
-                    champs.setMotifImpayeVisible(true);
-                    champs.setMotifImpayeObligatoire(false);  // Optionnel
-                }
-                break;
-
             case EN_COURS:
                 if (arrivee == StatutDossier.PROMESSE) {
                     champs.setMotifImpayeVisible(true);
@@ -85,43 +83,90 @@ public class TransitionService {
                     champs.setDatePromesseVisible(true);
                     champs.setDatePromesseObligatoire(true);
                 } else if (arrivee == StatutDossier.INJOIGNABLE) {
-                    champs.setCompteRenduObligatoire(false);  // Optionnel pour cette transition
+                    champs.setCompteRenduObligatoire(false);
                     champs.setRecidiveVisible(true);
                     champs.setRecidiveObligatoire(true);
                 } else if (arrivee == StatutDossier.REGULARISE) {
-                    // Motif impayé masqué, pas de promesse
+                    champs.setCompteRenduObligatoire(true);
+                }
+                break;
+
+            case PROMESSE:
+                if (arrivee == StatutDossier.REGULARISE) {
+                    champs.setCompteRenduObligatoire(true);
+                } else if (arrivee == StatutDossier.EN_COURS) {  // Promesse rompue
+                    champs.setMotifImpayeVisible(true);
+                    champs.setMotifImpayeObligatoire(false);
+                    champs.setCompteRenduObligatoire(true);
                 }
                 break;
 
             case INJOIGNABLE:
                 if (arrivee == StatutDossier.EN_COURS) {
                     champs.setMotifImpayeVisible(true);
-                    champs.setMotifImpayeObligatoire(false);  // Optionnel
-                } else if (arrivee == StatutDossier.INJOIGNABLE) {  // Récidive
-                    champs.setCompteRenduObligatoire(false);  // Optionnel
+                    champs.setMotifImpayeObligatoire(false);
+                    champs.setCompteRenduObligatoire(true);
+                }
+                break;
+
+            case ALERTE:
+                // Depuis ALERTE, on peut aller vers tous les statuts actifs
+                if (arrivee == StatutDossier.PROMESSE) {
+                    champs.setMotifImpayeVisible(true);
+                    champs.setMotifImpayeObligatoire(false);
+                    champs.setMontantPromesseVisible(true);
+                    champs.setMontantPromesseObligatoire(true);
+                    champs.setDatePromesseVisible(true);
+                    champs.setDatePromesseObligatoire(true);
+                } else if (arrivee == StatutDossier.INJOIGNABLE) {
+                    champs.setCompteRenduObligatoire(false);
                     champs.setRecidiveVisible(true);
                     champs.setRecidiveObligatoire(true);
                 }
                 break;
 
-            case PROMESSE:
+            case SUIVI_PROMESSE:
                 if (arrivee == StatutDossier.REGULARISE) {
-                    // Pas de ressaisie de promesse, masqué
-                } else if (arrivee == StatutDossier.EN_COURS) {  // Promesse rompue
+                    champs.setCompteRenduObligatoire(true);
+                } else if (arrivee == StatutDossier.EN_COURS) {
                     champs.setMotifImpayeVisible(true);
-                    champs.setMotifImpayeObligatoire(false);  // Optionnel
-                    champs.setCompteRenduObligatoire(true);  // Obligatoire (justifier la rupture)
+                    champs.setMotifImpayeObligatoire(false);
+                    champs.setCompteRenduObligatoire(true);
+                } else if (arrivee == StatutDossier.PROMESSE) {
+                    champs.setMontantPromesseVisible(true);
+                    champs.setMontantPromesseObligatoire(true);
+                    champs.setDatePromesseVisible(true);
+                    champs.setDatePromesseObligatoire(true);
+                }
+                break;
+
+            case SUIVI_INJOIGNABLE:
+                if (arrivee == StatutDossier.EN_COURS) {
+                    champs.setMotifImpayeVisible(true);
+                    champs.setMotifImpayeObligatoire(false);
+                    champs.setCompteRenduObligatoire(true);
+                } else if (arrivee == StatutDossier.PROMESSE) {
+                    champs.setMotifImpayeVisible(true);
+                    champs.setMotifImpayeObligatoire(false);
+                    champs.setMontantPromesseVisible(true);
+                    champs.setMontantPromesseObligatoire(true);
+                    champs.setDatePromesseVisible(true);
+                    champs.setDatePromesseObligatoire(true);
+                } else if (arrivee == StatutDossier.INJOIGNABLE) {
+                    champs.setCompteRenduObligatoire(false);
+                    champs.setRecidiveVisible(true);
+                    champs.setRecidiveObligatoire(true);
                 }
                 break;
 
             case REGULARISE:
                 if (arrivee == StatutDossier.CLOTURE) {
-                    // Pas de motif impayé, pas de promesse
+                    champs.setCompteRenduObligatoire(false);
                 }
                 break;
 
             case CLOTURE:
-                // Aucune transition possible, le formulaire est désactivé
+                // Aucune transition possible
                 break;
         }
 

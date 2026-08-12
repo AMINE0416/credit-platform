@@ -14,6 +14,7 @@ import org.eqdom.creditplatform.model.Dossier;
 import org.eqdom.creditplatform.model.StatutDossier;
 import org.eqdom.creditplatform.model.User;
 import org.eqdom.creditplatform.model.Role;
+import org.eqdom.creditplatform.service.ImportAvecDetectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @RestController
@@ -146,13 +149,34 @@ public class ImportController {
     }
     
     @PostMapping("/excel")
-    public ResponseEntity<ImportRapport> importExcel(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<ImportRapport> importExcel(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "moisImport", required = false) String moisImport) {
         ImportRapport rapport = new ImportRapport();
         rapport.setStatut("EN_COURS");
         int nbInserees = 0;
         int nbMisesAJour = 0;
         int nbRejetees = 0;
         List<Map<String, String>> erreurs = new ArrayList<>();
+
+        // Déterminer le mois d'import : 
+        // Si le paramètre est une date complète (YYYY-MM-DD), extraire l'année-mois
+        // Sinon utiliser le paramètre tel quel ou le mois courant
+        final String moisImportFinal;
+        if (moisImport != null && !moisImport.trim().isEmpty()) {
+            String param = moisImport.trim();
+            // Si le format est YYYY-MM-DD (10 caractères), extraire YYYY-MM
+            if (param.length() == 10 && param.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                moisImportFinal = param.substring(0, 7); // Extraire YYYY-MM
+                log.info("Import Excel - Date reçue: {}, Mois extrait: {}", param, moisImportFinal);
+            } else {
+                moisImportFinal = param;
+                log.info("Import Excel - Mois d'import: {}", moisImportFinal);
+            }
+        } else {
+            moisImportFinal = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+            log.info("Import Excel - Mois d'import (par défaut): {}", moisImportFinal);
+        }
 
         try (InputStream is = file.getInputStream();
              Workbook workbook = new XSSFWorkbook(is)) {
@@ -168,11 +192,21 @@ public class ImportController {
                     return ResponseEntity.ok(rapport);
                 }
 
+                // Créer un mapping des colonnes - stocker à la fois le nom original et en minuscules
                 Map<String, Integer> columnMap = new HashMap<>();
+                Map<String, Integer> columnMapLower = new HashMap<>();
                 for (int i = 0; i < headerRow.getLastCellNum(); i++) {
                     String header = getCellValue(headerRow, i).trim();
                     columnMap.put(header, i);
+                    columnMapLower.put(header.toLowerCase(), i);
                 }
+                
+                // Log des colonnes trouvées pour debug
+                log.info("=== Colonnes Excel trouvées ({} colonnes) ===", columnMap.size());
+                columnMap.keySet().stream().sorted().forEach(col -> 
+                    log.info("  - '{}'", col)
+                );
+                log.info("============================================");
 
                 for (int i = 1; i <= sheet.getLastRowNum(); i++) {
                     Row row = sheet.getRow(i);
@@ -181,45 +215,88 @@ public class ImportController {
                     try {
                         rowCount++;
                     
-                        // Colonnes Client - utiliser les en-têtes
-                        String cin = getCellValueByHeader(row, columnMap, "num_cin1");
-                        String nom = getCellValueByHeader(row, columnMap, "nom");
-                        String prenom = getCellValueByHeader(row, columnMap, "prenom");
-                        String telephone = getCellValueByHeader(row, columnMap, "cli_tel");
-                        String telephone2 = getCellValueByHeader(row, columnMap, "TEL2");
-                        String adresse = getCellValueByHeader(row, columnMap, "cli_adr");
-                        String ville = getCellValueByHeader(row, columnMap, "Lib_Ville");
-                        String codeAgence = getCellValueByHeader(row, columnMap, "cod_age");
-                        String libAgence = getCellValueByHeader(row, columnMap, "lib_age");
-                        String adresseCadrage = getCellValueByHeader(row, columnMap, "Adresse_Cadrage");
+                        // Colonnes Client - utiliser les en-têtes avec tolérance de casse
+                        String cin = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "num_cin1");
+                        final String nom = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "nom");
+                        final String prenom = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "prenom");
+                        final String telephone = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "cli_tel");
+                        final String telephone2 = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "TEL2");
+                        final String adresse = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "cli_adr");
+                        final String ville = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "Lib_Ville");
+                        final String codeAgence = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "cod_age");
+                        final String libAgence = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "lib_age");
+                        final String adresseCadrage = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "Adresse_Cadrage");
 
-                        // Colonnes Crédit - utiliser les en-têtes
-                        String referenceContrat = getCellValueByHeader(row, columnMap, "ANC_REFDO");
-                        String fromProv = getCellValueByHeader(row, columnMap, "From_Prov");
-                        String gestCin = getCellValueByHeader(row, columnMap, "GEST_CIN");
-                        String typeCredit = getCellValueByHeader(row, columnMap, "CSP_PDT");
-                        String segment = getCellValueByHeader(row, columnMap, "Segment");
-                        String nbrImpaye = getCellValueByHeader(row, columnMap, "nbr_imp");
-                        String mensualite = getCellValueByHeader(row, columnMap, "Mensualite");
-                        String encours = getCellValueByHeader(row, columnMap, "encours");
-                        String impayeMontant = getCellValueByHeader(row, columnMap, "Mnt_Imp");
-                        String prvCum = getCellValueByHeader(row, columnMap, "prv_cum");
-                        String stage = getCellValueByHeader(row, columnMap, "stage");
-                        String dvr = getCellValueByHeader(row, columnMap, "DVR");
-                        String reecheance = getCellValueByHeader(row, columnMap, "Reecheance");
-                        String immatriculation = getCellValueByHeader(row, columnMap, "Immatriculation");
+                        // Colonnes Crédit - utiliser les en-têtes avec tolérance de casse
+                        String referenceContrat = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "ANC_REFDO");
+                        final String fromProv = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "From_Prov");
+                        final String gestCin = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "GEST_CIN");
+                        final String typeCredit = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "CSP_PDT");
+                        final String segment = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "Segment");
+                        final String nbrImpaye = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "nbr_imp");
+                        final String mensualite = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "Mensualite");
+                        final String encours = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "encours");
+                        final String impayeMontant = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "Mnt_Imp");
+                        final String prvCum = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "prv_cum");
+                        final String stage = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "stage");
+                        final String dvr = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "DVR");
+                        final String reecheance = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "Reecheance");
+                        final String immatriculation = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "Immatriculation");
+                        
+                        // ⭐ NOUVELLE COLONNE : Score (cherche plusieurs variantes)
+                        String scoreTemp = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "score_final");
+                        if (scoreTemp == null || scoreTemp.trim().isEmpty()) {
+                            scoreTemp = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "Score_final");
+                        }
+                        if (scoreTemp == null || scoreTemp.trim().isEmpty()) {
+                            scoreTemp = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "SCORE_FINAL");
+                        }
+                        if (scoreTemp == null || scoreTemp.trim().isEmpty()) {
+                            scoreTemp = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "Score");
+                        }
+                        if (scoreTemp == null || scoreTemp.trim().isEmpty()) {
+                            scoreTemp = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "SCORE");
+                        }
+                        if (scoreTemp == null || scoreTemp.trim().isEmpty()) {
+                            scoreTemp = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "score");
+                        }
+                        final String score = scoreTemp;
+                        
+                        // Log pour debug
+                        if (rowCount <= 3) { // Logger seulement les 3 premières lignes
+                            log.info("Ligne {}: score brut = '{}', référence = '{}'", 
+                                rowCount, score, referenceContrat);
+                        }
                         
                         // ⭐ NOUVELLE COLONNE : Email de l'agent assigné
-                        String agentEmail = getCellValueByHeader(row, columnMap, "Agent_Email");
+                        String agentEmail = getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "Agent_Email");
+                        
+                        // Définir les variables finales pour utilisation dans les lambdas
+                        final String cinFinal = cin.trim();
+                        final String referenceContratFinal = referenceContrat.trim();
+                        
+                        // Debug pour les 3 premières lignes
+                        if (rowCount <= 3) {
+                            log.info("Ligne {} - Données financières:", rowCount);
+                            log.info("  Mensualité brute: '{}' → parsée: {}", 
+                                mensualite, parseBigDecimalOrZero(mensualite));
+                            log.info("  Encours brut: '{}' → parsé: {}", 
+                                encours, parseBigDecimalOrZero(encours));
+                            log.info("  Impayé brut: '{}' → parsé: {}", 
+                                impayeMontant, parseBigDecimalOrZero(impayeMontant));
+                            log.info("  Provision brute: '{}' → parsée: {}", 
+                                prvCum, parseBigDecimalOrZero(prvCum));
+                            log.info("  Score: '{}', Référence: '{}'", score, referenceContratFinal);
+                        }
 
-                        if (cin.isEmpty() || referenceContrat.isEmpty()) {
+                        if (cinFinal.isEmpty() || referenceContratFinal.isEmpty()) {
                             nbRejetees++;
-                            erreurs.add(Map.of("ligne", String.valueOf(i + 1), "referenceContrat", referenceContrat,
+                            erreurs.add(Map.of("ligne", String.valueOf(i + 1), "referenceContrat", referenceContratFinal,
                                     "motif", "CIN ou référence contrat manquante"));
                             continue;
                         }
 
-                        Client client = clientRepository.findByCin(cin)
+                        Client client = clientRepository.findByCin(cinFinal)
                                 .map(existingClient -> {
                                     existingClient.setNom(nom);
                                     existingClient.setPrenom(prenom);
@@ -234,7 +311,7 @@ public class ImportController {
                                 })
                                 .orElseGet(() -> {
                                     Client newClient = new Client();
-                                    newClient.setCin(cin);
+                                    newClient.setCin(cinFinal);
                                     newClient.setNom(nom);
                                     newClient.setPrenom(prenom);
                                     newClient.setTelephone(telephone);
@@ -247,10 +324,12 @@ public class ImportController {
                                     return clientRepository.save(newClient);
                                 });
 
-                        boolean creditExists = creditRepository.findByReferenceContrat(referenceContrat).isPresent();
-                        Credit credit = creditRepository.findByReferenceContrat(referenceContrat)
+                        boolean creditExists = creditRepository
+                                .findByReferenceContratAndClientId(referenceContratFinal, client.getId())
+                                .isPresent();
+                        Credit credit = creditRepository
+                                .findByReferenceContratAndClientId(referenceContratFinal, client.getId())
                                 .map(existingCredit -> {
-                                    existingCredit.setClient(client);
                                     existingCredit.setFromProv(fromProv);
                                     existingCredit.setGestCin(gestCin);
                                     existingCredit.setTypeCredit(typeCredit);
@@ -264,12 +343,13 @@ public class ImportController {
                                     existingCredit.setDvr(dvr);
                                     existingCredit.setReecheance(reecheance);
                                     existingCredit.setImmatriculation(immatriculation);
+                                    existingCredit.setScore(parseScore(score));
                                     return creditRepository.save(existingCredit);
                                 })
                                 .orElseGet(() -> {
                                     Credit newCredit = new Credit();
                                     newCredit.setClient(client);
-                                    newCredit.setReferenceContrat(referenceContrat);
+                                    newCredit.setReferenceContrat(referenceContratFinal);
                                     newCredit.setFromProv(fromProv);
                                     newCredit.setGestCin(gestCin);
                                     newCredit.setTypeCredit(typeCredit);
@@ -283,60 +363,56 @@ public class ImportController {
                                     newCredit.setDvr(dvr);
                                     newCredit.setReecheance(reecheance);
                                     newCredit.setImmatriculation(immatriculation);
+                                    newCredit.setScore(parseScore(score));
                                     return creditRepository.save(newCredit);
                                 });
 
-                        // ⭐ LOGIQUE D'AFFECTATION AUTOMATIQUE
                         if (!creditExists) {
-                            if (!dossierRepository.findByCreditId(credit.getId()).isPresent()) {
+                            if (dossierRepository.findByCreditId(credit.getId()).isEmpty()) {
                                 Dossier dossier = new Dossier();
                                 dossier.setCredit(credit);
-                                
-                                // Si un email agent est fourni dans le fichier Excel
+                                dossier.setMoisImport(moisImportFinal); // ⭐ Renseigner le mois d'import
+
                                 if (agentEmail != null && !agentEmail.trim().isEmpty()) {
                                     try {
-                                        // Chercher l'agent ou le créer automatiquement
                                         User agent = userRepository.findByEmail(agentEmail.trim())
                                                 .orElseGet(() -> {
-                                                    log.info("⚡ Création automatique de l'agent : {}", agentEmail);
+                                                    log.info("Création automatique de l'agent : {}", agentEmail);
                                                     return creerAgentAutomatiquement(agentEmail.trim(), ville);
                                                 });
-                                        
+
                                         if (agent != null) {
-                                            // Agent trouvé ou créé : affectation automatique
                                             dossier.setAgentAssigne(agent);
                                             dossier.setStatutActuel(StatutDossier.EN_COURS);
-                                            log.debug("✓ Dossier {} affecté à {}", referenceContrat, agentEmail);
+                                            log.debug("Dossier {} affecté à {}", referenceContratFinal, agentEmail);
                                         } else {
-                                            dossier.setStatutActuel(StatutDossier.NOUVEAU);
-                                            log.warn("⚠ Impossible de créer l'agent {}", agentEmail);
+                                            dossier.setStatutActuel(StatutDossier.EN_COURS);
+                                            log.warn("Impossible de créer l'agent {}", agentEmail);
                                         }
                                     } catch (Exception e) {
-                                        dossier.setStatutActuel(StatutDossier.NOUVEAU);
-                                        log.error("⚠ Erreur affectation agent {} : {}", agentEmail, e.getMessage());
+                                        dossier.setStatutActuel(StatutDossier.EN_COURS);
+                                        log.error("Erreur affectation agent {} : {}", agentEmail, e.getMessage());
                                     }
                                 } else {
-                                    // Pas d'email agent : statut NOUVEAU par défaut
-                                    dossier.setStatutActuel(StatutDossier.NOUVEAU);
+                                    dossier.setStatutActuel(StatutDossier.EN_COURS);
                                 }
-                                
+
                                 dossierRepository.save(dossier);
                                 nbInserees++;
                             }
                         } else {
-                            // Crédit existant : mise à jour de l'affectation si nécessaire
                             dossierRepository.findByCreditId(credit.getId()).ifPresent(dossier -> {
                                 if (agentEmail != null && !agentEmail.trim().isEmpty()) {
                                     User agent = userRepository.findByEmail(agentEmail.trim())
                                             .orElseGet(() -> creerAgentAutomatiquement(agentEmail.trim(), ville));
-                                    
+
                                     if (agent != null) {
                                         dossier.setAgentAssigne(agent);
-                                        if (dossier.getStatutActuel() == StatutDossier.NOUVEAU) {
+                                        if (dossier.getStatutActuel() == StatutDossier.EN_COURS) {
                                             dossier.setStatutActuel(StatutDossier.EN_COURS);
                                         }
                                         dossierRepository.save(dossier);
-                                        log.debug("✓ Dossier existant {} réaffecté à {}", referenceContrat, agentEmail);
+                                        log.debug("Dossier existant {} réaffecté à {}", referenceContratFinal, agentEmail);
                                     }
                                 }
                             });
@@ -346,7 +422,7 @@ public class ImportController {
                     } catch (Exception e) {
                         nbRejetees++;
                         erreurs.add(Map.of("ligne", String.valueOf(i + 1), "referenceContrat", 
-                                getCellValueByHeader(row, columnMap, "ANC_REFDO"),
+                                getCellValueByHeaderFlexible(row, columnMap, columnMapLower, "ANC_REFDO"),
                                 "motif", e.getMessage()));
                     }
                 }
@@ -411,20 +487,54 @@ public class ImportController {
         return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
     }
 
+    private final DataFormatter dataFormatter = new DataFormatter();
+
     private String getCellValue(Row row, int colIndex) {
         Cell cell = row.getCell(colIndex);
         if (cell == null) return "";
-
-        return switch (cell.getCellType()) {
-            case STRING -> cell.getStringCellValue();
-            case NUMERIC -> String.valueOf((int) cell.getNumericCellValue());
-            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
-            default -> "";
-        };
+        return dataFormatter.formatCellValue(cell).trim();
     }
 
     private String getCellValueByHeader(Row row, Map<String, Integer> columnMap, String header) {
         Integer colIndex = columnMap.get(header);
+        if (colIndex == null) return "";
+        return getCellValue(row, colIndex);
+    }
+
+    /**
+     * Version flexible qui essaie plusieurs variantes du nom de colonne
+     * pour être tolérant aux différences de casse
+     */
+    private String getCellValueByHeaderFlexible(Row row, Map<String, Integer> columnMap, 
+                                                Map<String, Integer> columnMapLower, String header) {
+        // 1. Essayer le nom exact
+        Integer colIndex = columnMap.get(header);
+        
+        // 2. Essayer en minuscules
+        if (colIndex == null) {
+            colIndex = columnMapLower.get(header.toLowerCase());
+        }
+        
+        // 3. Pour certaines colonnes, essayer des variantes connues
+        if (colIndex == null && header.equals("Mensualite")) {
+            // Essayer mensualite, MENSUALITE, Mensualité, etc.
+            colIndex = columnMapLower.get("mensualite");
+        }
+        if (colIndex == null && header.equals("encours")) {
+            colIndex = columnMapLower.get("encours");
+        }
+        if (colIndex == null && header.equals("Mnt_Imp")) {
+            // Essayer Mnt_Imp, mnt_imp, MNT_IMP, Montant_Impaye, etc.
+            colIndex = columnMapLower.get("mnt_imp");
+            if (colIndex == null) colIndex = columnMapLower.get("montant_impaye");
+            if (colIndex == null) colIndex = columnMapLower.get("impaye_montant");
+        }
+        if (colIndex == null && header.equals("prv_cum")) {
+            // Essayer prv_cum, PRV_CUM, Prv_Cum, provision_cumulee, etc.
+            colIndex = columnMapLower.get("prv_cum");
+            if (colIndex == null) colIndex = columnMapLower.get("provision_cumulee");
+        }
+        
         if (colIndex == null) return "";
         return getCellValue(row, colIndex);
     }
@@ -438,10 +548,126 @@ public class ImportController {
     }
 
     private BigDecimal parseBigDecimalOrZero(String value) {
-        try {
-            return new BigDecimal(value.trim());
-        } catch (Exception e) {
+        if (value == null || value.trim().isEmpty()) {
             return BigDecimal.ZERO;
+        }
+        
+        try {
+            String cleanValue = value.trim();
+            
+            // Remplacer la virgule par un point (format français → format anglais)
+            cleanValue = cleanValue.replace(',', '.');
+            
+            // Supprimer les espaces (ex: "1 234,56" → "1234.56")
+            cleanValue = cleanValue.replaceAll("\\s+", "");
+            
+            // Supprimer les séparateurs de milliers si présents
+            // Ex: "1.234,56" devient "1234.56" ou "1,234.56" devient "1234.56"
+            if (cleanValue.contains(".") && cleanValue.indexOf('.') < cleanValue.lastIndexOf('.')) {
+                // Cas "1.234.567,89" - les points sont des séparateurs de milliers
+                cleanValue = cleanValue.replaceAll("\\.", "");
+                cleanValue = cleanValue.replace(',', '.');
+            }
+            
+            return new BigDecimal(cleanValue);
+        } catch (Exception e) {
+            log.warn("Impossible de parser le nombre: '{}' - Erreur: {}", value, e.getMessage());
+            return BigDecimal.ZERO;
+        }
+    }
+    
+    /**
+     * Parse le score depuis Excel
+     * Gère les formats: "78%", "78", "0.78", etc.
+     * Convertit tout en valeur 0-100
+     */
+    private BigDecimal parseScore(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            log.debug("Score vide ou null");
+            return null;
+        }
+        
+        try {
+            String cleanValue = value.trim();
+            log.debug("Parse score: valeur brute = '{}'", cleanValue);
+            
+            // Si le format contient un %, on enlève le % et on garde la valeur
+            if (cleanValue.endsWith("%")) {
+                cleanValue = cleanValue.substring(0, cleanValue.length() - 1).trim();
+                BigDecimal result = new BigDecimal(cleanValue);
+                log.debug("Score avec % : '{}' → {}", value, result);
+                return result;
+            }
+            
+            // Sinon, parser normalement
+            BigDecimal score = new BigDecimal(cleanValue);
+            
+            // Si la valeur est entre 0 et 1 (ex: 0.78), la convertir en pourcentage
+            if (score.compareTo(BigDecimal.ZERO) >= 0 && score.compareTo(BigDecimal.ONE) <= 1) {
+                BigDecimal result = score.multiply(new BigDecimal("100"));
+                log.debug("Score décimal : {} → {}", score, result);
+                return result;
+            }
+            
+            log.debug("Score normal : {}", score);
+            return score;
+        } catch (Exception e) {
+            log.warn("Impossible de parser le score: '{}' - Erreur: {}", value, e.getMessage());
+            return null;
+        }
+    }
+
+    // ================================================================
+    // NOUVEAU : Import avec détection automatique des récurrents
+    // ================================================================
+
+    @Autowired
+    private ImportAvecDetectionService importAvecDetectionService;
+
+    /**
+     * ⭐ NOUVEAU ENDPOINT : Import avec détection automatique des dossiers récurrents
+     * 
+     * @param file Fichier Excel à importer
+     * @param moisImport Le mois d'import (format: "2024-08" ou "2024-08-15" - date complète acceptée)
+     * @param authentication L'utilisateur admin connecté
+     * @return Rapport d'import avec statistiques de détection
+     */
+    @PostMapping("/avec-detection")
+    public ResponseEntity<?> importerAvecDetection(
+        @RequestParam("file") MultipartFile file,
+        @RequestParam("moisImport") String moisImport,
+        org.springframework.security.core.Authentication authentication
+    ) {
+        try {
+            org.eqdom.creditplatform.security.CustomUserDetails userDetails =
+                (org.eqdom.creditplatform.security.CustomUserDetails) authentication.getPrincipal();
+            User user = userDetails.getUser();
+            
+            // Extraire le mois si une date complète est fournie (YYYY-MM-DD)
+            String moisImportFinal = moisImport;
+            if (moisImport.length() == 10 && moisImport.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                moisImportFinal = moisImport.substring(0, 7); // Extraire YYYY-MM
+                log.info("Import avec détection - Date reçue: {}, Mois extrait: {}, Utilisateur: {}", 
+                    moisImport, moisImportFinal, user.getEmail());
+            } else {
+                log.info("Import avec détection - Mois: {}, Utilisateur: {}", 
+                    moisImportFinal, user.getEmail());
+            }
+            
+            var response = importAvecDetectionService.importerAvecDetection(
+                file, 
+                moisImportFinal, 
+                user.getId()
+            );
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("Erreur lors de l'import avec détection", e);
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "message", "Erreur: " + e.getMessage()
+            ));
         }
     }
 }

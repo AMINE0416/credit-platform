@@ -72,7 +72,7 @@ public class ExcelExportService {
             // === COLONNES CRÉDIT (ORIGINALES) ===
             "ANC_REFDO", "From_Prov", "GEST_CIN", "CSP_PDT", "Segment",
             "nbr_imp", "Mensualite", "encours", "Mnt_Imp", "prv_cum",
-            "stage", "DVR", "Reecheance", "Immatriculation",
+            "stage", "DVR", "Reecheance", "Immatriculation", "Score",
             
             // === COLONNES GESTION DOSSIER ===
             "Agent_Email", "Statut_Actuel", "Date_Creation_Dossier",
@@ -80,7 +80,7 @@ public class ExcelExportService {
             // === DONNÉES SAISIES PAR L'AGENT (dernière action) ===
             "Derniere_Action_Date", "Nature_Action", "Code_Resultat",
             "Motif_Impaye", "Recidive", "Montant_Promesse", "Date_Promesse",
-            "Compte_Rendu"
+            "Telephone_Qualifie", "Compte_Rendu"
         };
 
         for (int i = 0; i < headers.length; i++) {
@@ -135,6 +135,9 @@ public class ExcelExportService {
             row.createCell(colNum++).setCellValue(nvl(credit.getDvr()));
             row.createCell(colNum++).setCellValue(nvl(credit.getReecheance()));
             row.createCell(colNum++).setCellValue(nvl(credit.getImmatriculation()));
+            row.createCell(colNum++).setCellValue(
+                credit.getScore() != null ? credit.getScore().doubleValue() : 0
+            );
             
             // === COLONNES GESTION DOSSIER ===
             row.createCell(colNum++).setCellValue(
@@ -179,14 +182,18 @@ public class ExcelExportService {
                         ? derniereAction.getDatePromesse().format(DATE_FORMAT) 
                         : ""
                 );
+                row.createCell(colNum++).setCellValue(nvl(derniereAction.getNouveauTelephone()));
                 row.createCell(colNum++).setCellValue(nvl(derniereAction.getCompteRendu()));
             } else {
                 // Pas encore d'action : colonnes vides
-                for (int i = 0; i < 8; i++) {
+                for (int i = 0; i < 9; i++) {
                     row.createCell(colNum++).setCellValue("");
                 }
             }
         }
+
+        // Activer les filtres automatiques sur la ligne d'en-têtes
+        sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0, 0, 0, headers.length - 1));
 
         // Auto-size colonnes
         for (int i = 0; i < headers.length; i++) {
@@ -210,15 +217,24 @@ public class ExcelExportService {
         // Styles
         CellStyle headerStyle = createHeaderStyle(workbook);
 
-        // En-têtes - colonnes essentielles seulement
+        // En-têtes - TOUTES les informations saisies
         Row headerRow = sheet.createRow(0);
         String[] headers = {
-            "Référence contrat", "Nom client", "Prénom client",
-            "Transition", "Agent", "Date/Heure",
-            "Nature action", "Code résultat", 
-            "Motif impayé", "Récidive", 
-            "Montant promesse", "Date promesse", 
-            "Compte rendu"
+            // Identification
+            "Référence contrat", "CIN", "Nom client", "Prénom client",
+            "Téléphone principal", "Téléphone secondaire", "Adresse", "Ville",
+            "Code Agence", "Lib Agence", "Adresse Cadrage",
+            
+            // Informations crédit
+            "Type Crédit", "Segment", "Nbr Impayés", "Mensualité", 
+            "Encours", "Montant Impayé", "Stage",
+            
+            // Action et statut
+            "Statut Actuel", "Agent", "Date/Heure Action",
+            "Nature Action", "Code Résultat", 
+            "Motif Impayé", "Récidive", 
+            "Montant Promesse", "Date Promesse",
+            "Téléphone Qualifié", "Compte Rendu"
         };
 
         for (int i = 0; i < headers.length; i++) {
@@ -245,139 +261,71 @@ public class ExcelExportService {
 
             int colNum = 0;
             
-            // Colonnes de base
-            row.createCell(colNum++).setCellValue(credit.getReferenceContrat());
-            row.createCell(colNum++).setCellValue(client.getNom());
-            row.createCell(colNum++).setCellValue(client.getPrenom());
+            // === IDENTIFICATION ===
+            row.createCell(colNum++).setCellValue(nvl(credit.getReferenceContrat()));
+            row.createCell(colNum++).setCellValue(nvl(client.getCin()));
+            row.createCell(colNum++).setCellValue(nvl(client.getNom()));
+            row.createCell(colNum++).setCellValue(nvl(client.getPrenom()));
+            row.createCell(colNum++).setCellValue(nvl(client.getTelephone()));
+            row.createCell(colNum++).setCellValue(nvl(client.getTelephone2()));
+            row.createCell(colNum++).setCellValue(nvl(client.getAdresse()));
+            row.createCell(colNum++).setCellValue(nvl(client.getVille()));
+            row.createCell(colNum++).setCellValue(nvl(client.getCodeAgence()));
+            row.createCell(colNum++).setCellValue(nvl(client.getLibAgence()));
+            row.createCell(colNum++).setCellValue(nvl(client.getAdresseCadrage()));
             
-            // Transition déterminée intelligemment
-            String transition = determinerTransition(action, dossier);
-            row.createCell(colNum++).setCellValue(transition);
-            
+            // === INFORMATIONS CRÉDIT ===
+            row.createCell(colNum++).setCellValue(nvl(credit.getTypeCredit()));
+            row.createCell(colNum++).setCellValue(nvl(credit.getSegment()));
+            row.createCell(colNum++).setCellValue(credit.getNbrImpaye() != null ? credit.getNbrImpaye() : 0);
             row.createCell(colNum++).setCellValue(
-                agent.getNom() + " " + agent.getPrenom()
+                credit.getMensualite() != null ? credit.getMensualite().doubleValue() : 0
             );
             row.createCell(colNum++).setCellValue(
-                action.getDateAction().format(DATETIME_FORMAT)
+                credit.getEncours() != null ? credit.getEncours().doubleValue() : 0
             );
+            row.createCell(colNum++).setCellValue(
+                credit.getImpayeMontant() != null ? credit.getImpayeMontant().doubleValue() : 0
+            );
+            row.createCell(colNum++).setCellValue(nvl(credit.getStage()));
             
-            // Champs toujours obligatoires
+            // === ACTION ET STATUT ===
+            row.createCell(colNum++).setCellValue(dossier.getStatutActuel().name());
+            row.createCell(colNum++).setCellValue(agent.getNom() + " " + agent.getPrenom());
+            row.createCell(colNum++).setCellValue(action.getDateAction().format(DATETIME_FORMAT));
+            
             row.createCell(colNum++).setCellValue(
                 action.getNatureAction() != null ? action.getNatureAction().name() : ""
             );
             row.createCell(colNum++).setCellValue(
                 action.getCodeResultat() != null ? action.getCodeResultat().name() : ""
             );
-            
-            // COLONNES CONDITIONNELLES selon la logique métier
-            
-            // Motif impayé : Visible pour certaines transitions (EN_COURS → PROMESSE, INJOIGNABLE → EN_COURS, etc.)
-            String motifImpaye = "";
-            if (action.getMotifImpaye() != null) {
-                motifImpaye = action.getMotifImpaye().name();
-            }
-            row.createCell(colNum++).setCellValue(motifImpaye);
-            
-            // Récidive : Visible uniquement pour transitions vers INJOIGNABLE
-            String recidive = "";
-            if (action.getRecidive() != null) {
-                recidive = action.getRecidive().name();
-            }
-            row.createCell(colNum++).setCellValue(recidive);
-            
-            // Montant promesse : Visible uniquement pour transition EN_COURS → PROMESSE
-            String montantPromesse = "";
-            if (action.getMontantPromesse() != null) {
-                montantPromesse = String.format("%.2f", action.getMontantPromesse().doubleValue());
-            }
-            row.createCell(colNum++).setCellValue(montantPromesse);
-            
-            // Date promesse : Visible uniquement pour transition EN_COURS → PROMESSE
-            String datePromesse = "";
-            if (action.getDatePromesse() != null) {
-                datePromesse = action.getDatePromesse().format(DATE_FORMAT);
-            }
-            row.createCell(colNum++).setCellValue(datePromesse);
-            
-            // Compte rendu
             row.createCell(colNum++).setCellValue(
-                action.getCompteRendu() != null ? action.getCompteRendu() : ""
+                action.getMotifImpaye() != null ? action.getMotifImpaye().name() : ""
             );
+            row.createCell(colNum++).setCellValue(
+                action.getRecidive() != null ? action.getRecidive().name() : ""
+            );
+            row.createCell(colNum++).setCellValue(
+                action.getMontantPromesse() != null 
+                    ? String.format("%.2f", action.getMontantPromesse().doubleValue()) 
+                    : ""
+            );
+            row.createCell(colNum++).setCellValue(
+                action.getDatePromesse() != null 
+                    ? action.getDatePromesse().format(DATE_FORMAT) 
+                    : ""
+            );
+            row.createCell(colNum++).setCellValue(nvl(action.getNouveauTelephone()));
+            row.createCell(colNum++).setCellValue(nvl(action.getCompteRendu()));
         }
 
+        // Activer les filtres automatiques sur la ligne d'en-têtes
+        sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0, 0, 0, headers.length - 1));
+        
         // Auto-size colonnes
         for (int i = 0; i < headers.length; i++) {
             sheet.autoSizeColumn(i);
-        }
-    }
-
-    /**
-     * Détermine la transition basée sur l'action et ses champs
-     * 
-     * LOGIQUE MÉTIER :
-     * - EN_COURS → PROMESSE : Si montant_promesse ET date_promesse présents
-     * - EN_COURS → INJOIGNABLE : Si récidive = NON (première fois)
-     * - INJOIGNABLE → INJOIGNABLE : Si récidive = OUI (récidive)
-     * - PROMESSE → REGULARISE : Aucun nouveau montant/date (déjà connu)
-     * - Autres : Basé sur le statut actuel du dossier
-     * 
-     * NOTE IMPORTANTE :
-     * Pour une traçabilité parfaite, il serait idéal de stocker statutAvant et statutApres
-     * directement dans l'entité ActionDossier. Cette approche par heuristique est une solution
-     * de transition basée sur les champs métier présents dans l'action.
-     */
-    private String determinerTransition(ActionDossier action, Dossier dossier) {
-        StatutDossier statutActuel = dossier.getStatutActuel();
-        
-        // Transition vers PROMESSE : Si montant ET date promesse présents
-        // Logique métier : EN_COURS → PROMESSE (obligatoire)
-        if (action.getMontantPromesse() != null && action.getDatePromesse() != null) {
-            return "EN_COURS → PROMESSE";
-        }
-        
-        // Transition vers INJOIGNABLE avec récidive
-        // Logique métier : INJOIGNABLE → INJOIGNABLE (récidive = OUI)
-        if (action.getRecidive() != null && action.getRecidive() == Recidive.OUI) {
-            return "INJOIGNABLE → INJOIGNABLE (récidive)";
-        }
-        
-        // Transition vers INJOIGNABLE première fois
-        // Logique métier : EN_COURS → INJOIGNABLE (récidive = NON)
-        if (action.getRecidive() != null && action.getRecidive() == Recidive.NON) {
-            return "EN_COURS → INJOIGNABLE";
-        }
-        
-        // Pour les autres cas, on infère basé sur le statut actuel
-        // Note : Cette approche a des limites si un dossier a changé plusieurs fois
-        // Solution idéale : Stocker statutAvant dans ActionDossier lors de la création
-        switch (statutActuel) {
-            case PROMESSE:
-                // Si on est en PROMESSE sans montant dans cette action, c'est probablement
-                // une transition INJOIGNABLE → EN_COURS → PROMESSE
-                return "→ PROMESSE";
-            case REGULARISE:
-                // Peut venir de PROMESSE ou EN_COURS
-                if (action.getMontantPromesse() == null) {
-                    return "PROMESSE → REGULARISE";
-                } else {
-                    return "EN_COURS → REGULARISE";
-                }
-            case CLOTURE:
-                return "REGULARISE → CLOTURE";
-            case EN_COURS:
-                // Retour en EN_COURS depuis INJOIGNABLE ou PROMESSE
-                if (action.getMotifImpaye() != null) {
-                    return "INJOIGNABLE → EN_COURS";
-                } else {
-                    return "PROMESSE → EN_COURS (rupture)";
-                }
-            case NOUVEAU:
-                return "Création";
-            case INJOIGNABLE:
-                // Déjà géré ci-dessus, mais par sécurité
-                return "→ INJOIGNABLE";
-            default:
-                return "→ " + statutActuel.name();
         }
     }
 

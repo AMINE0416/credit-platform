@@ -26,14 +26,29 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
+            System.out.println("=== TENTATIVE DE CONNEXION ===");
+            System.out.println("Email: " + request.getEmail());
+            System.out.println("Password (premiers 5 chars): " + request.getPassword().substring(0, Math.min(5, request.getPassword().length())) + "...");
+            
+            // Vérifier que l'utilisateur existe d'abord
+            User user = userRepository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> new UserNotFoundException("Utilisateur introuvable: " + request.getEmail()));
+            
+            System.out.println("Utilisateur trouvé: " + user.getNom() + " " + user.getPrenom());
+            System.out.println("Actif: " + user.isActif());
+            System.out.println("Hash dans DB (premiers 20 chars): " + user.getPassword().substring(0, Math.min(20, user.getPassword().length())) + "...");
+            System.out.println("Nombre de rôles: " + (user.getRoles() != null ? user.getRoles().size() : "NULL"));
+            
+            if (user.getRoles() != null) {
+                user.getRoles().forEach(r -> System.out.println("  - Rôle: " + r.getNom()));
+            }
+            
             // Authentifier l'utilisateur
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
             
-            // Récupérer l'utilisateur
-            User user = userRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new UserNotFoundException("Utilisateur introuvable: " + request.getEmail()));
+            System.out.println("Authentification réussie !");
             
             // Vérifier si l'utilisateur est actif
             if (!user.isActif()) {
@@ -47,8 +62,11 @@ public class AuthController {
             return ResponseEntity.ok(new LoginResponse(token, user.getNom(), user.getPrenom(), roles));
             
         } catch (BadCredentialsException e) {
+            System.out.println("❌ Erreur: Identifiants incorrects");
+            e.printStackTrace();
             return ResponseEntity.status(401).body("Email ou mot de passe incorrect");
         } catch (Exception e) {
+            System.out.println("❌ Erreur inattendue: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.status(500).body("Erreur lors de l'authentification: " + e.getMessage());
         }

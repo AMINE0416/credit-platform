@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "credits")
+@Table(name = "credits", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_credit_ref_client", columnNames = {"reference_contrat", "client_id"})
+})
 public class Credit {
 
     @Id
@@ -15,7 +17,7 @@ public class Credit {
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String referenceContrat; // ANC_REFDO
 
     private String fromProv;
@@ -33,6 +35,9 @@ public class Credit {
     private String dvr;
     private String reecheance;
     private String immatriculation;
+    
+    // Score du dossier (0-100)
+    private BigDecimal score;
 
     // Getters / Setters
     public Long getId() { return id; }
@@ -66,4 +71,6 @@ public class Credit {
     public void setReecheance(String reecheance) { this.reecheance = reecheance; }
     public String getImmatriculation() { return immatriculation; }
     public void setImmatriculation(String immatriculation) { this.immatriculation = immatriculation; }
+    public BigDecimal getScore() { return score; }
+    public void setScore(BigDecimal score) { this.score = score; }
 }

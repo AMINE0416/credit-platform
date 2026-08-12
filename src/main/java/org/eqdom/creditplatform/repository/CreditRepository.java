@@ -6,4 +6,5 @@ import java.util.Optional;
 
 public interface CreditRepository extends JpaRepository<Credit, Long> {
     Optional<Credit> findByReferenceContrat(String referenceContrat);
+    Optional<Credit> findByReferenceContratAndClientId(String referenceContrat, Long clientId);
 }

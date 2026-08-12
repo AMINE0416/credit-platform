@@ -73,6 +73,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/users").hasAuthority("ADMIN")
                         .requestMatchers("/api/users/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/imports/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/archivage/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/dossiers/affectation").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/dossiers/export/excel").hasAuthority("ADMIN")
                         .requestMatchers("/api/reporting/**").hasAuthority("ADMIN")

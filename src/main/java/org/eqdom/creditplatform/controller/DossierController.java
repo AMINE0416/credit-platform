@@ -96,6 +96,26 @@ public class DossierController {
         return ResponseEntity.ok(actions);
     }
 
+    // Récupérer la dernière promesse pour un dossier SUIVI_PROMESSE
+    @GetMapping("/{id}/derniere-promesse")
+    public ResponseEntity<ActionDossier> getDernierePromesse(@PathVariable Long id) {
+        System.out.println("=== GET /api/dossiers/" + id + "/derniere-promesse ===");
+        
+        ActionDossier promesse = dossierService.getDernierePromesse(id);
+        
+        if (promesse == null) {
+            System.out.println("Aucune promesse trouvée - retour 204");
+            return ResponseEntity.noContent().build();
+        }
+        
+        System.out.println("Promesse trouvée - ID: " + promesse.getId());
+        System.out.println("  - Montant: " + promesse.getMontantPromesse());
+        System.out.println("  - Date: " + promesse.getDatePromesse());
+        System.out.println("  - Compte rendu: " + (promesse.getCompteRendu() != null ? promesse.getCompteRendu().substring(0, Math.min(50, promesse.getCompteRendu().length())) : "null"));
+        
+        return ResponseEntity.ok(promesse);
+    }
+
     /**
      * Export Excel complet avec:
      * - Feuille "État actuel": snapshot de tous les dossiers

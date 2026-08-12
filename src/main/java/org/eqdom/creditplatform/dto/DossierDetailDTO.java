@@ -13,11 +13,15 @@ public class DossierDetailDTO {
     private ClientDTO client;
     private CreditDTO credit;
     private Long nbActions;
+    private String datePromesse;
+    private Double montantPromesse;
 
     public DossierDetailDTO(Dossier dossier, long nbActions) {
         this.dossierId = dossier.getId();
         this.statut = dossier.getStatutActuel().name();
         this.nbActions = nbActions;
+        this.datePromesse = dossier.getDatePromesse() != null ? dossier.getDatePromesse().toString() : null;
+        this.montantPromesse = dossier.getMontantPromesse();
         
         try {
             Credit credit = dossier.getCredit();
@@ -41,6 +45,8 @@ public class DossierDetailDTO {
     public ClientDTO getClient() { return client; }
     public CreditDTO getCredit() { return credit; }
     public Long getNbActions() { return nbActions; }
+    public String getDatePromesse() { return datePromesse; }
+    public Double getMontantPromesse() { return montantPromesse; }
 
     public static class ClientDTO {
         private Long id;
@@ -98,6 +104,7 @@ public class DossierDetailDTO {
         private String dvr;
         private String reecheance;
         private String immatriculation;
+        private BigDecimal score;
 
         public CreditDTO(Credit credit) {
             this.id = credit.getId();
@@ -115,6 +122,7 @@ public class DossierDetailDTO {
             this.dvr = credit.getDvr();
             this.reecheance = credit.getReecheance();
             this.immatriculation = credit.getImmatriculation();
+            this.score = credit.getScore();
         }
 
         public Long getId() { return id; }
@@ -132,5 +140,6 @@ public class DossierDetailDTO {
         public String getDvr() { return dvr; }
         public String getReecheance() { return reecheance; }
         public String getImmatriculation() { return immatriculation; }
+        public BigDecimal getScore() { return score; }
     }
 }

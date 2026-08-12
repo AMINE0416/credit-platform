@@ -23,6 +23,7 @@ public class DossierService {
     @Autowired private DossierRepository dossierRepository;
     @Autowired private ActionDossierRepository actionDossierRepository;
     @Autowired private CreditRepository creditRepository;
+    @Autowired private ClientRepository clientRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private TransitionService transitionService;
 
@@ -65,10 +66,18 @@ public class DossierService {
         }
 
         if (agentId != null) {
-            dossiers = dossiers.stream()
-                    .filter(d -> d.getAgentAssigne() != null 
-                            && d.getAgentAssigne().getId().equals(agentId))
-                    .collect(Collectors.toList());
+            if (agentId == 0) {
+                // Filtrer les dossiers non assignés
+                dossiers = dossiers.stream()
+                        .filter(d -> d.getAgentAssigne() == null)
+                        .collect(Collectors.toList());
+            } else {
+                // Filtrer les dossiers assignés à un agent spécifique
+                dossiers = dossiers.stream()
+                        .filter(d -> d.getAgentAssigne() != null 
+                                && d.getAgentAssigne().getId().equals(agentId))
+                        .collect(Collectors.toList());
+            }
         }
 
         // Mapper vers DTO
@@ -186,6 +195,26 @@ public class DossierService {
         // Mettre à jour le statut du dossier si nécessaire
         if (nouveauStatut != null) {
             dossier.setStatutActuel(nouveauStatut);
+            
+            // Si le nouveau statut est PROMESSE ou SUIVI_PROMESSE, enregistrer les infos de promesse
+            if (nouveauStatut == StatutDossier.PROMESSE || nouveauStatut == StatutDossier.SUIVI_PROMESSE) {
+                // Mettre à jour seulement si de nouvelles valeurs sont fournies
+                if (request.getDatePromesse() != null) {
+                    dossier.setDatePromesse(request.getDatePromesse());
+                }
+                if (request.getMontantPromesse() != null) {
+                    dossier.setMontantPromesse(request.getMontantPromesse().doubleValue());
+                }
+                // Mettre à jour l'adresse de cadrage si fournie
+                if (request.getNouvelleAdresseCadrage() != null && !request.getNouvelleAdresseCadrage().trim().isEmpty()) {
+                    Client client = dossier.getCredit().getClient();
+                    client.setAdresseCadrage(request.getNouvelleAdresseCadrage().trim());
+                    clientRepository.save(client);
+                }
+                // Si passage de PROMESSE vers SUIVI_PROMESSE, conserver les valeurs existantes
+                // (rien à faire, les valeurs sont déjà dans le dossier)
+            }
+            
             dossierRepository.save(dossier);
         }
 
@@ -240,6 +269,41 @@ public class DossierService {
     }
 
     /**
+     * Récupère la dernière promesse de paiement pour un dossier SUIVI_PROMESSE.
+     * @return La dernière action avec une promesse, ou null si aucune
+     */
+    public ActionDossier getDernierePromesse(Long dossierId) {
+        System.out.println("=== DossierService.getDernierePromesse(" + dossierId + ") ===");
+        
+        if (!dossierRepository.existsById(dossierId)) {
+            throw new DossierNotFoundException("Dossier non trouvé avec l'ID: " + dossierId);
+        }
+
+        List<ActionDossier> actions = actionDossierRepository.findByDossierIdOrderByDateActionDesc(dossierId);
+        System.out.println("Nombre total d'actions: " + actions.size());
+        
+        ActionDossier result = actions.stream()
+                .filter(action -> {
+                    boolean hasPromesse = action.getMontantPromesse() != null && action.getDatePromesse() != null;
+                    if (hasPromesse) {
+                        System.out.println("  Action " + action.getId() + " a une promesse: " + 
+                            action.getMontantPromesse() + " MAD le " + action.getDatePromesse());
+                    }
+                    return hasPromesse;
+                })
+                .findFirst()
+                .orElse(null);
+        
+        if (result == null) {
+            System.out.println("Aucune action avec promesse trouvée");
+        } else {
+            System.out.println("Promesse trouvée - Action ID: " + result.getId());
+        }
+        
+        return result;
+    }
+
+    /**
      * Mapper un Dossier vers un DossierListItemDTO.
      */
     private DossierListItemDTO mapToDossierListItemDTO(Dossier dossier) {
@@ -257,7 +321,8 @@ public class DossierService {
                 credit.getReferenceContrat(),
                 dossier.getStatutActuel().name(),
                 client.getVille(),
-                agentNom
+                agentNom,
+                credit.getScore()
         );
     }
 }

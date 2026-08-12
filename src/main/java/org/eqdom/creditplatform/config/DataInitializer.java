@@ -138,6 +138,39 @@ public class DataInitializer implements CommandLineRunner {
         System.out.println("📝 Base de données prête - Aucun dossier présent");
         System.out.println("💡 Utilisez la fonction d'import Excel pour ajouter des dossiers");
 
+        migrerContrainteCreditComposite();
+    }
+
+    /**
+     * Remplace l'ancienne contrainte unique sur reference_contrat seule
+     * par la contrainte composite (reference_contrat, client_id).
+     */
+    private void migrerContrainteCreditComposite() {
+        try {
+            entityManager.createNativeQuery("""
+                    DO $$
+                    DECLARE
+                        constraint_name text;
+                    BEGIN
+                        SELECT tc.constraint_name INTO constraint_name
+                        FROM information_schema.table_constraints tc
+                        JOIN information_schema.key_column_usage kcu
+                          ON tc.constraint_name = kcu.constraint_name
+                         AND tc.table_schema = kcu.table_schema
+                        WHERE tc.table_name = 'credits'
+                          AND tc.constraint_type = 'UNIQUE'
+                          AND kcu.column_name = 'reference_contrat'
+                        GROUP BY tc.constraint_name
+                        HAVING COUNT(*) = 1;
+
+                        IF constraint_name IS NOT NULL THEN
+                            EXECUTE format('ALTER TABLE credits DROP CONSTRAINT IF EXISTS %I', constraint_name);
+                        END IF;
+                    END $$;
+                    """).executeUpdate();
+        } catch (Exception e) {
+            System.err.println("⚠️ Migration contrainte crédit ignorée : " + e.getMessage());
+        }
     }
 
 }

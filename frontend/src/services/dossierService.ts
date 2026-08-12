@@ -10,6 +10,7 @@ export interface DossierListItem {
     statut: string;
     ville: string;
     agentAssigne: string;
+    score: number | null;
 }
 
 export interface DossierDetail {
@@ -18,6 +19,8 @@ export interface DossierDetail {
     client: any;
     credit: any;
     nbActions: number;
+    datePromesse?: string | null;
+    montantPromesse?: number | null;
 }
 
 export interface TransitionInfo {
@@ -50,6 +53,7 @@ export interface ActionRequest {
     montantPromesse: number | null;
     datePromesse: string | null;
     nouveauTelephone: string | null;
+    nouvelleAdresseCadrage: string | null;
     nouveauStatut: string;
 }
 
@@ -128,4 +132,36 @@ export async function exportExcel(): Promise<void> {
 
 export async function supprimerDossier(id: number): Promise<void> {
     await axios.delete(`${API_URL}/${id}`);
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Récupérer la dernière promesse de paiement pour un dossier SUIVI_PROMESSE
+// ────────────────────────────────────────────────────────────────────────────
+export interface DernierePromesse {
+  montantPromesse: number;
+  datePromesse: string; // Format ISO (yyyy-MM-dd)
+  compteRendu?: string;
+  dateAction?: string;
+}
+
+export async function getDernierePromesse(dossierId: number): Promise<DernierePromesse | null> {
+  console.log(`[getDernierePromesse] Appel API pour dossier ${dossierId}`);
+  console.log(`[getDernierePromesse] URL: ${API_URL}/${dossierId}/derniere-promesse`);
+  
+  try {
+    const res = await axios.get(`${API_URL}/${dossierId}/derniere-promesse`);
+    console.log(`[getDernierePromesse] Status: ${res.status}`);
+    console.log(`[getDernierePromesse] Data:`, res.data);
+    return res.data;
+  } catch (error: any) {
+    console.log(`[getDernierePromesse] Erreur attrapée:`, error);
+    console.log(`[getDernierePromesse] Status:`, error.response?.status);
+    console.log(`[getDernierePromesse] Data:`, error.response?.data);
+    
+    if (error.response?.status === 204) {
+      console.log(`[getDernierePromesse] Aucune promesse trouvée (204)`);
+      return null; // Pas de promesse trouvée
+    }
+    throw error;
+  }
 }

@@ -18,6 +18,10 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
+        // Protection contre les rôles null
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
         return user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority(role.getNom()))
                 .collect(Collectors.toList());
