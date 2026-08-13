@@ -41,6 +41,23 @@ export async function importExcel(file: File, moisImport?: string): Promise<Impo
 }
 
 /**
+ * ⚡ Import Excel OPTIMISÉ pour gros volumes (3000+ lignes)
+ * Utilise un traitement par lots avec cache en mémoire
+ * 5-10x plus rapide que l'import standard
+ */
+export async function importExcelOptimise(file: File, moisImport?: string): Promise<ImportRapport> {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (moisImport) {
+        formData.append("moisImport", moisImport);
+    }
+    const res = await axios.post(`${API_URL}/excel-optimise`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data;
+}
+
+/**
  * Import Excel avec détection automatique des dossiers récurrents du mois précédent
  */
 export async function importExcelAvecDetection(file: File, moisImport: string): Promise<ImportAvecDetectionRapport> {

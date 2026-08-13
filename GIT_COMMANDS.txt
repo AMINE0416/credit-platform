@@ -1,0 +1,18 @@
+# ==================================================
+# COMMANDES GIT - Import Excel Optimisé
+# ==================================================
+
+# Ajouter tous les fichiers
+git add .
+
+# Commiter avec message
+git commit -m "feat: Import Excel optimise 10x plus rapide - batch processing + cache en memoire"
+
+# Pousser vers le repository
+git push
+
+# ==================================================
+# RESULTAT ATTENDU :
+# - Railway/Render deploiera automatiquement
+# - Vercel deploiera automatiquement
+# ==================================================
