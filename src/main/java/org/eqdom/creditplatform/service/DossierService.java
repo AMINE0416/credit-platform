@@ -30,6 +30,8 @@ public class DossierService {
     /**
      * Récupère la liste des dossiers avec filtrage optionnel.
      * Les ADMIN voient tous les dossiers, les AGENT voient uniquement les leurs.
+     * 
+     * OPTIMISÉ : Utilise des requêtes SQL ciblées au lieu de charger tout en mémoire
      */
     public List<DossierListItemDTO> getDossiers(
             String statut, 
@@ -37,47 +39,79 @@ public class DossierService {
             Long agentId, 
             User currentUser) {
 
-        // Charger tous les dossiers
-        List<Dossier> dossiers = dossierRepository.findAll();
-
         // Si l'utilisateur est un AGENT, ne retourner que ses dossiers
         boolean isAgent = currentUser.getRoles().stream()
                 .anyMatch(role -> "AGENT".equals(role.getNom()));
 
         if (isAgent) {
-            dossiers = dossiers.stream()
-                    .filter(d -> d.getAgentAssigne() != null 
-                            && d.getAgentAssigne().getId().equals(currentUser.getId()))
-                    .collect(Collectors.toList());
-        }
-
-        // Appliquer les filtres si fournis
-        if (statut != null && !statut.isEmpty()) {
-            StatutDossier statutEnum = StatutDossier.valueOf(statut);
-            dossiers = dossiers.stream()
-                    .filter(d -> d.getStatutActuel() == statutEnum)
-                    .collect(Collectors.toList());
-        }
-
-        if (ville != null && !ville.isEmpty()) {
-            dossiers = dossiers.stream()
-                    .filter(d -> ville.equals(d.getCredit().getClient().getVille()))
-                    .collect(Collectors.toList());
-        }
-
-        if (agentId != null) {
-            if (agentId == 0) {
-                // Filtrer les dossiers non assignés
+            // Pour un agent, charger uniquement ses dossiers (déjà optimisé)
+            List<Dossier> dossiers = dossierRepository.findByAgentAssigne(currentUser);
+            
+            // Appliquer les filtres côté code si nécessaire
+            if (statut != null && !statut.isEmpty()) {
+                StatutDossier statutEnum = StatutDossier.valueOf(statut);
                 dossiers = dossiers.stream()
-                        .filter(d -> d.getAgentAssigne() == null)
-                        .collect(Collectors.toList());
-            } else {
-                // Filtrer les dossiers assignés à un agent spécifique
-                dossiers = dossiers.stream()
-                        .filter(d -> d.getAgentAssigne() != null 
-                                && d.getAgentAssigne().getId().equals(agentId))
+                        .filter(d -> d.getStatutActuel() == statutEnum)
                         .collect(Collectors.toList());
             }
+            
+            if (ville != null && !ville.isEmpty()) {
+                dossiers = dossiers.stream()
+                        .filter(d -> ville.equals(d.getCredit().getClient().getVille()))
+                        .collect(Collectors.toList());
+            }
+            
+            return dossiers.stream()
+                    .map(this::mapToDossierListItemDTO)
+                    .collect(Collectors.toList());
+        }
+
+        // ADMIN : Utiliser des requêtes optimisées selon les filtres
+        List<Dossier> dossiers;
+        
+        // Convertir le statut si fourni
+        StatutDossier statutEnum = null;
+        if (statut != null && !statut.isEmpty()) {
+            statutEnum = StatutDossier.valueOf(statut);
+        }
+        
+        // Choisir la requête la plus appropriée selon les filtres
+        if (statutEnum != null && ville != null && !ville.isEmpty() && agentId != null && agentId > 0) {
+            // 3 filtres: statut + ville + agent
+            dossiers = dossierRepository.findByStatutAndVilleAndAgentWithDetails(statutEnum, ville, agentId);
+        }
+        else if (statutEnum != null && ville != null && !ville.isEmpty()) {
+            // 2 filtres: statut + ville
+            dossiers = dossierRepository.findByStatutAndVilleWithDetails(statutEnum, ville);
+        }
+        else if (statutEnum != null && agentId != null && agentId > 0) {
+            // 2 filtres: statut + agent
+            dossiers = dossierRepository.findByStatutAndAgentWithDetails(statutEnum, agentId);
+        }
+        else if (ville != null && !ville.isEmpty() && agentId != null && agentId > 0) {
+            // 2 filtres: ville + agent
+            dossiers = dossierRepository.findByVilleAndAgentWithDetails(ville, agentId);
+        }
+        else if (statutEnum != null) {
+            // 1 filtre: statut
+            dossiers = dossierRepository.findByStatutActuelWithDetails(statutEnum);
+        }
+        else if (ville != null && !ville.isEmpty()) {
+            // 1 filtre: ville
+            dossiers = dossierRepository.findByVilleWithDetails(ville);
+        }
+        else if (agentId != null) {
+            if (agentId == 0) {
+                // Dossiers non assignés
+                dossiers = dossierRepository.findByAgentNullWithDetails();
+            } else {
+                // Dossiers d'un agent spécifique
+                dossiers = dossierRepository.findByAgentIdWithDetails(agentId);
+            }
+        }
+        else {
+            // Aucun filtre: charger tout (avec jointures)
+            dossiers = dossierRepository.findAllWithDetails();
         }
 
         // Mapper vers DTO
